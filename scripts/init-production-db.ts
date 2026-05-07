@@ -146,6 +146,9 @@ async function ensureDefaults() {
       }
     });
   }
+
+  await prisma.video.updateMany({ where: { resourceFormat: "Doodle Video" }, data: { resourceFormat: "Doodle" } });
+  await prisma.video.updateMany({ where: { resourceFormat: "Image Diary" }, data: { resourceFormat: "Image Diaries" } });
 }
 
 async function seedStarterResourcesIfEmpty() {
