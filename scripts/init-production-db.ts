@@ -9,6 +9,22 @@ import {
   slugify
 } from "../src/lib/resource-taxonomy";
 
+function normalizeDatabaseUrl() {
+  const databaseUrl = process.env.DATABASE_URL?.trim();
+  const directUrl = process.env.DIRECT_URL?.trim();
+  const isPostgresUrl = (value?: string) => value?.startsWith("postgresql://") || value?.startsWith("postgres://");
+
+  if (databaseUrl && databaseUrl !== process.env.DATABASE_URL) {
+    process.env.DATABASE_URL = databaseUrl;
+  }
+
+  if (!isPostgresUrl(process.env.DATABASE_URL) && isPostgresUrl(directUrl)) {
+    process.env.DATABASE_URL = directUrl;
+  }
+}
+
+normalizeDatabaseUrl();
+
 const prisma = new PrismaClient();
 
 const sampleVideoIds = ["ysz5S6PUM-U", "ScMzIvxBSi4", "aqz-KE-bpKQ", "jNQXAC9IVRw", "dQw4w9WgXcQ"];
