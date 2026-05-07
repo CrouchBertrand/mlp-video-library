@@ -392,33 +392,26 @@ export async function importYouTubePlaylistAction(formData: FormData) {
   if (!sourcePlaylistId) redirect("/admin/import?error=Please paste a valid YouTube playlist URL.");
 
   const languageId = cleanOptional(formData.get("languageId"));
-  const moduleId = cleanOptional(formData.get("moduleId"));
+  let moduleId = cleanOptional(formData.get("moduleId"));
   if (!languageId) redirect("/admin/import?error=Please choose a language.");
-  if (!moduleId) redirect("/admin/import?error=Please choose a category.");
 
   const [language, categoryRow] = await Promise.all([
     prisma.language.findUnique({ where: { id: languageId } }),
-    prisma.module.findUnique({ where: { id: moduleId } })
+    moduleId
+      ? prisma.module.findUnique({ where: { id: moduleId } })
+      : prisma.module.findFirst({ where: { name: "General Marketplace Literacy" } })
   ]);
   if (!language) redirect("/admin/import?error=Selected language was not found.");
-  if (!categoryRow) redirect("/admin/import?error=Selected category was not found.");
+  if (!moduleId && categoryRow) moduleId = categoryRow.id;
 
   const program = cleanText(formData.get("program")) || PROGRAM_NAME;
-  const category = categoryRow.name;
+  const category = categoryRow?.name || cleanText(formData.get("category")) || "General Marketplace Literacy";
   const resourceType = cleanText(formData.get("resourceType")) || "Video";
   const resourceFormat = normalizeResourceFormat(cleanText(formData.get("resourceFormat")) || "Doodle");
   const fallbackThumbnail = cleanOptional(formData.get("thumbnailUrl")) || language.thumbnailPath || languageThumbnail(language.code);
   const visibilityValue = visibility(formData.get("visibility"));
   const isPublished = visibilityValue === "Published";
   const sourcePlaylistUrl = youtubePlaylistUrl(sourcePlaylistId);
-  const targetPlaylistId = cleanOptional(formData.get("targetPlaylistId"));
-  const targetPlaylistMode = cleanText(formData.get("targetPlaylistMode")) || "add";
-  const targetPlaylist = targetPlaylistId ? await prisma.playlist.findUnique({ where: { id: targetPlaylistId } }) : null;
-  if (targetPlaylistId && !targetPlaylist) redirect("/admin/import?error=Selected app collection was not found.");
-  if (targetPlaylistId && targetPlaylistMode === "replace") {
-    await prisma.playlistVideo.deleteMany({ where: { playlistId: targetPlaylistId } });
-  }
-  let playlistOrder = targetPlaylistId ? await prisma.playlistVideo.count({ where: { playlistId: targetPlaylistId } }) : 0;
 
   let totalFound = 0;
   let imported = 0;
@@ -446,6 +439,16 @@ export async function importYouTubePlaylistAction(formData: FormData) {
 
     const items = payload.items ?? [];
     totalFound += items.length;
+    const pageVideoIds = items
+      .map((item) => item.contentDetails?.videoId || item.snippet?.resourceId?.videoId)
+      .filter((id): id is string => Boolean(id));
+    const existingVideos = pageVideoIds.length
+      ? await prisma.video.findMany({
+          where: { youtubeVideoId: { in: pageVideoIds }, languageId, resourceFormat, category }
+        })
+      : [];
+    const existingByYoutubeId = new Map(existingVideos.map((video) => [video.youtubeVideoId, video]));
+
     for (const item of items) {
       const youtubeVideoId = item.contentDetails?.videoId || item.snippet?.resourceId?.videoId;
       const rawTitle = cleanText(item.snippet?.title);
@@ -455,9 +458,7 @@ export async function importYouTubePlaylistAction(formData: FormData) {
         continue;
       }
       const orderIndex = typeof item.snippet?.position === "number" ? item.snippet.position + 1 : totalFound;
-      const existing = await prisma.video.findFirst({
-        where: { youtubeVideoId, languageId, resourceFormat, category }
-      });
+      const existing = existingByYoutubeId.get(youtubeVideoId);
       const data = {
         title,
         resourceTitle: title,
@@ -478,7 +479,7 @@ export async function importYouTubePlaylistAction(formData: FormData) {
         moduleId,
         region: cleanText(formData.get("region")) || "Global",
         audience: cleanText(formData.get("audience")) || "Trainers",
-        tags: cleanText(formData.get("tags")) || `${language.name}, ${category}, ${resourceFormat}`,
+        tags: `${language.name}, ${category}, ${resourceFormat}`,
         visibility: visibilityValue
       };
       const savedVideo = existing
@@ -490,13 +491,7 @@ export async function importYouTubePlaylistAction(formData: FormData) {
       } else {
         imported++;
       }
-      if (targetPlaylistId) {
-        await prisma.playlistVideo.upsert({
-          where: { playlistId_videoId: { playlistId: targetPlaylistId, videoId: savedVideo.id } },
-          update: {},
-          create: { playlistId: targetPlaylistId, videoId: savedVideo.id, sortOrder: ++playlistOrder || orderIndex }
-        });
-      }
+      existingByYoutubeId.set(savedVideo.youtubeVideoId, savedVideo);
     }
     nextPageToken = payload.nextPageToken;
   } while (nextPageToken);

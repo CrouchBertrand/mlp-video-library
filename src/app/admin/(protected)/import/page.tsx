@@ -2,7 +2,7 @@ import { bulkImportVideosAction, importYouTubePlaylistAction, upsertVideoAction 
 import { Notice } from "@/components/admin-shell";
 import { FormActions, PageTitle, RegionAudienceFields, SelectField, TextArea, TextField, VisibilityField } from "@/components/admin-form";
 import { prisma } from "@/lib/prisma";
-import { PROGRAM_NAME, resourceFormats } from "@/lib/resource-taxonomy";
+import { PROGRAM_NAME, resourceCategories, resourceFormats } from "@/lib/resource-taxonomy";
 
 export default async function ImportPage({ searchParams }: { searchParams: Promise<{ success?: string; error?: string }> }) {
   const params = await searchParams;
@@ -38,23 +38,13 @@ export default async function ImportPage({ searchParams }: { searchParams: Promi
         <SelectField label="Resource Format" name="resourceFormat" defaultValue="Doodle">
           {resourceFormats.map((item) => <option key={item} value={item}>{item}</option>)}
         </SelectField>
-        <SelectField label="Category" name="moduleId" required>
-          <option value="">Choose category</option>{categories.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
-        </SelectField>
-        <SelectField label="Import into app collection optional" name="targetPlaylistId">
-          <option value="">Do not assign to a collection</option>
-          {playlists.map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}
-        </SelectField>
-        <SelectField label="Collection import behavior" name="targetPlaylistMode" defaultValue="add">
-          <option value="add">Add imported resources to selected collection</option>
-          <option value="replace">Replace resources in selected collection</option>
-        </SelectField>
+        <input type="hidden" name="moduleId" value={categories.find((item) => item.name === "General Marketplace Literacy")?.id ?? ""} />
+        <input type="hidden" name="category" value={resourceCategories.find((item) => item.name === "General Marketplace Literacy")?.name ?? "General Marketplace Literacy"} />
         <SelectField label="Resource Type" name="resourceType" defaultValue="Video">
           <option value="Video">Video</option>
         </SelectField>
         <VisibilityField value="Draft" />
         <RegionAudienceFields audience="Trainers" />
-        <TextField label="Tags" name="tags" />
         <div className="md:col-span-2">
           <FormActions submitLabel={apiKey ? "Import YouTube Playlist" : "Import requires API key"} cancelHref="/admin" />
         </div>
