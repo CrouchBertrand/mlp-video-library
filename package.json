@@ -1,0 +1,95 @@
+{
+  "name": "mlp-video-library",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build --webpack",
+    "build:netlify": "prisma generate --schema=prisma/schema.postgres.prisma && next build --webpack",
+    "package:server": "node scripts/package-server.mjs",
+    "dist:win": "npm.cmd run build && npm.cmd run package:server && electron-builder --win dir",
+    "dist:portable": "npm.cmd run build && npm.cmd run package:server && electron-builder --win portable",
+    "start": "next start",
+    "lint": "eslint .",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:generate:postgres": "prisma generate --schema=prisma/schema.postgres.prisma",
+    "db:push:postgres": "prisma db push --schema=prisma/schema.postgres.prisma",
+    "db:seed:postgres": "prisma db seed --schema=prisma/schema.postgres.prisma",
+    "setup": "npm.cmd install && npm.cmd run db:push && npm.cmd run db:seed"
+  },
+  "dependencies": {
+    "@prisma/client": "5.22.0",
+    "bcryptjs": "latest",
+    "clsx": "latest",
+    "lucide-react": "latest",
+    "next": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "zod": "latest"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "latest",
+    "@types/bcryptjs": "latest",
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "eslint": "latest",
+    "eslint-config-next": "latest",
+    "electron": "latest",
+    "electron-builder": "latest",
+    "playwright": "^1.59.1",
+    "prisma": "5.22.0",
+    "tailwindcss": "latest",
+    "tsx": "latest",
+    "typescript": "latest"
+  },
+  "main": "electron/main.cjs",
+  "build": {
+    "appId": "org.marketplaceliteracy.mlp-video-library",
+    "productName": "MLP Video Library",
+    "directories": {
+      "output": "dist"
+    },
+    "afterPack": "scripts/after-pack.cjs",
+    "files": [
+      "electron/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": ".next/standalone",
+        "to": "app-server",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "dev.db",
+        "to": "dev.db"
+      },
+      {
+        "from": ".env",
+        "to": "mlp.env"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "MLP-Video-Library-Windows-${version}.${ext}"
+    },
+    "portable": {
+      "artifactName": "MLP-Video-Library-Windows-${version}.${ext}"
+    }
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  }
+}

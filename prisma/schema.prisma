@@ -1,0 +1,154 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         String   @default("editor")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Language {
+  id          String            @id @default(cuid())
+  name        String            @unique
+  displayName String
+  code        String            @unique
+  color       String            @default("#7f1d1d")
+  thumbnailPath String?
+  sortOrder   Int               @default(0)
+  isActive    Boolean           @default(true)
+  playlists   Playlist[]
+  videos      Video[]
+  sections    HomepageSection[]
+}
+
+model Module {
+  id          String            @id @default(cuid())
+  name        String            @unique
+  description String?
+  parentId    String?
+  parent      Module?           @relation("ModuleTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children    Module[]          @relation("ModuleTree")
+  color       String            @default("#f3e8e6")
+  sortOrder   Int               @default(0)
+  isActive    Boolean           @default(true)
+  playlists   Playlist[]
+  videos      Video[]
+  sections    HomepageSection[]
+}
+
+model Playlist {
+  id                    String                    @id @default(cuid())
+  title                 String
+  shortTitle            String?
+  description           String?
+  youtubePlaylistUrl    String?
+  thumbnailUrl          String?
+  uploadedThumbnailPath String?
+  languageId            String?
+  language              Language?                 @relation(fields: [languageId], references: [id], onDelete: SetNull)
+  moduleId              String?
+  module                Module?                   @relation(fields: [moduleId], references: [id], onDelete: SetNull)
+  region                String                    @default("Global")
+  audience              String                    @default("General")
+  tags                  String                    @default("")
+  visibility            String                    @default("Draft")
+  featured              Boolean                   @default(false)
+  sortOrder             Int                       @default(0)
+  createdAt             DateTime                  @default(now())
+  updatedAt             DateTime                  @updatedAt
+  videos                PlaylistVideo[]
+  homepageSections      HomepageSectionPlaylist[]
+}
+
+model Video {
+  id                    String          @id @default(cuid())
+  title                 String
+  resourceTitle         String?
+  description           String?
+  youtubeUrl            String          @default("")
+  youtubeVideoId        String          @default("")
+  embedUrl              String          @default("")
+  sourcePlaylistId      String?
+  sourcePlaylistUrl     String?
+  thumbnailUrl          String?
+  uploadedThumbnailPath String?
+  program               String          @default("Marketplace Literacy")
+  category              String          @default("General Marketplace Literacy")
+  resourceType          String          @default("Video")
+  resourceFormat        String          @default("Doodle")
+  transcript            String?
+  orderIndex            Int             @default(0)
+  isPublished           Boolean         @default(true)
+  languageId            String?
+  language              Language?       @relation(fields: [languageId], references: [id], onDelete: SetNull)
+  moduleId              String?
+  module                Module?         @relation(fields: [moduleId], references: [id], onDelete: SetNull)
+  region                String          @default("Global")
+  audience              String          @default("General")
+  tags                  String          @default("")
+  duration              String?
+  visibility            String          @default("Draft")
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+  playlists             PlaylistVideo[]
+
+  @@index([youtubeVideoId, languageId, resourceFormat, category])
+}
+
+model PlaylistVideo {
+  playlistId String
+  videoId    String
+  sortOrder  Int      @default(0)
+  playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  video      Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@id([playlistId, videoId])
+}
+
+model HomepageSection {
+  id               String                    @id @default(cuid())
+  title            String
+  description      String?
+  filterLanguageId String?
+  filterLanguage   Language?                 @relation(fields: [filterLanguageId], references: [id], onDelete: SetNull)
+  filterModuleId   String?
+  filterModule     Module?                   @relation(fields: [filterModuleId], references: [id], onDelete: SetNull)
+  layout           String                    @default("row")
+  sortOrder        Int                       @default(0)
+  visibility       String                    @default("Published")
+  playlists        HomepageSectionPlaylist[]
+}
+
+model HomepageSectionPlaylist {
+  homepageSectionId String
+  playlistId        String
+  sortOrder         Int             @default(0)
+  homepageSection   HomepageSection @relation(fields: [homepageSectionId], references: [id], onDelete: Cascade)
+  playlist          Playlist        @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+
+  @@id([homepageSectionId, playlistId])
+}
+
+model Settings {
+  id                Int     @id @default(1)
+  siteTitle         String  @default("MLP Video Library")
+  siteDescription   String  @default("A facilitator resource library for organized Marketplace Literacy resources by language, resource format, and category.")
+  logoPath          String?
+  primaryColor      String  @default("#A64026")
+  secondaryColor    String  @default("#624237")
+  contactEmail      String  @default("admin@marketplaceliteracy.org")
+  websiteUrl        String  @default("https://www.marketplaceliteracy.org")
+  youtubeChannelUrl String  @default("https://www.youtube.com/@marketplaceliteracy")
+  supportUrl        String?
+  footerText        String  @default("The Marketplace Literacy Project supports educators, facilitators, and learning programs with practical resources for subsistence marketplaces.")
+}

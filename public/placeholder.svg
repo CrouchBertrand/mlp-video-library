@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-label="MLP video thumbnail placeholder">
+  <rect width="1280" height="720" fill="#7f1d1d"/>
+  <rect x="64" y="64" width="1152" height="592" rx="28" fill="#fff7ed" opacity=".92"/>
+  <circle cx="640" cy="360" r="86" fill="#1d4ed8"/>
+  <path d="M617 311v98l84-49-84-49z" fill="white"/>
+  <text x="640" y="535" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="54" font-weight="700" fill="#201a18">Marketplace Literacy Project</text>
+</svg>
