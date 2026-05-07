@@ -139,6 +139,7 @@ Required Netlify environment variables:
 
 ```text
 DATABASE_URL=
+DIRECT_URL=
 SESSION_SECRET=
 YOUTUBE_API_KEY=
 COOKIE_SECURE=true
@@ -147,7 +148,9 @@ NODE_VERSION=20
 NEXT_PUBLIC_SITE_URL=https://your-temporary-site.netlify.app
 ```
 
-Keep `DATABASE_URL`, `SESSION_SECRET`, and `YOUTUBE_API_KEY` server-side only. Do not prefix them with `NEXT_PUBLIC_`.
+Keep `DATABASE_URL`, `DIRECT_URL`, `SESSION_SECRET`, and `YOUTUBE_API_KEY` server-side only. Do not prefix them with `NEXT_PUBLIC_`.
+
+For Supabase, use the pooled connection string for `DATABASE_URL` and the direct connection string for `DIRECT_URL`. Prisma uses `DIRECT_URL` when creating or updating tables during deployment.
 
 Before first Netlify deploy, create the production database and run this locally against the production `DATABASE_URL`:
 
