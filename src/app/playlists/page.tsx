@@ -3,8 +3,9 @@ import { ArrowRight, ListVideo } from "lucide-react";
 import { PublicFooter } from "@/components/public-footer";
 import { PublicHeader } from "@/components/public-header";
 import { YouTubePlaylistCard } from "@/components/youtube-playlist-card";
+import { publicPlaylistShelfTitle, selectPublicPlaylists } from "@/lib/playlist-organization";
 import { prisma } from "@/lib/prisma";
-import { youtubeStylePlaylists, youtubeStyleShelves } from "@/lib/resource-taxonomy";
+import { youtubeStyleShelves } from "@/lib/resource-taxonomy";
 
 export default async function PlaylistsPage() {
   const [languages, playlists] = await Promise.all([
@@ -16,9 +17,7 @@ export default async function PlaylistsPage() {
     })
   ]);
   const codeByLanguage = new Map(languages.map((language) => [language.name, language.code]));
-  const youtubeTitleSet = new Set<string>(youtubeStylePlaylists.map((playlist) => playlist.title));
-  const shelfByLanguageTitle = new Map(youtubeStylePlaylists.map((playlist) => [`${playlist.language}:${playlist.title}`, playlist.shelf]));
-  const shelfPlaylistsOnly = playlists.filter((playlist) => youtubeTitleSet.has(playlist.title) || playlist.id.startsWith("yt_") || Boolean(playlist.youtubePlaylistUrl));
+  const publicPlaylists = selectPublicPlaylists(playlists);
 
   return (
     <main className="mlp-page">
@@ -32,12 +31,7 @@ export default async function PlaylistsPage() {
       </section>
       <div className="mlp-container space-y-10 pb-12">
         {youtubeStyleShelves.map((shelf) => {
-          const firstShelfForLanguage = youtubeStyleShelves.find((item) => item.language === shelf.language)?.title;
-          const shelfPlaylists = shelfPlaylistsOnly.filter((playlist) => {
-            if (playlist.language?.name !== shelf.language) return false;
-            if (playlist.id.startsWith("yt_") || playlist.youtubePlaylistUrl) return shelf.title === firstShelfForLanguage;
-            return shelfByLanguageTitle.get(`${shelf.language}:${playlist.title}`) === shelf.title;
-          });
+          const shelfPlaylists = publicPlaylists.filter((playlist) => playlist.language?.name === shelf.language && publicPlaylistShelfTitle(playlist) === shelf.title);
           const code = codeByLanguage.get(shelf.language);
           if (!shelfPlaylists.length) return null;
           return (

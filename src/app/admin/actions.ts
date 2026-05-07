@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import bcrypt from "bcryptjs";
 import { clearAdminSession, requireAdmin, setAdminSession, verifyLogin } from "@/lib/auth";
+import { selectPublicPlaylists } from "@/lib/playlist-organization";
 import { prisma } from "@/lib/prisma";
 import { cleanOptional, cleanText } from "@/lib/sanitize";
 import { saveUploadedImage } from "@/lib/uploads";
@@ -84,6 +85,21 @@ type YouTubePlaylistMetadataResponse = {
   }>;
   error?: { message?: string };
 };
+
+async function findReusableImportPlaylist(sourcePlaylistUrl: string, title: string) {
+  const playlistByUrl = await prisma.playlist.findFirst({
+    where: { youtubePlaylistUrl: sourcePlaylistUrl },
+    include: { language: true, module: true }
+  });
+  if (playlistByUrl) return playlistByUrl;
+
+  const titleMatches = await prisma.playlist.findMany({
+    where: { title, visibility: { not: "Hidden" } },
+    include: { language: true, module: true, _count: { select: { videos: true } } }
+  });
+  const publicMatches = selectPublicPlaylists(titleMatches);
+  return publicMatches.length === 1 ? publicMatches[0] : null;
+}
 
 export async function loginAction(formData: FormData) {
   const email = cleanText(formData.get("email"));
@@ -428,20 +444,23 @@ export async function importYouTubePlaylistAction(formData: FormData) {
     ? await prisma.playlist.findUnique({ where: { id: targetPlaylistId }, include: { language: true, module: true } })
     : null;
   if (targetPlaylistId && !existingPlaylist) redirect("/admin/import?error=Selected app playlist was not found.");
+  const requestedPlaylistTitle = cleanText(formData.get("newPlaylistTitle")) || sourcePlaylistTitle;
+  const reusablePlaylist = existingPlaylist ? null : await findReusableImportPlaylist(sourcePlaylistUrl, requestedPlaylistTitle);
+  const targetPlaylist = existingPlaylist ?? reusablePlaylist;
 
   const playlistThumbnail =
     cleanOptional(formData.get("thumbnailUrl")) ||
     playlistMetadata?.thumbnails?.high?.url ||
     playlistMetadata?.thumbnails?.medium?.url ||
     playlistMetadata?.thumbnails?.default?.url ||
-    existingPlaylist?.thumbnailUrl ||
-    existingPlaylist?.language?.thumbnailPath ||
-    languageThumbnail(existingPlaylist?.language?.code);
+    targetPlaylist?.thumbnailUrl ||
+    targetPlaylist?.language?.thumbnailPath ||
+    languageThumbnail(targetPlaylist?.language?.code);
   const visibilityValue = visibility(formData.get("visibility"));
-  const playlist = existingPlaylist ?? await prisma.playlist.create({
+  const playlist = targetPlaylist ?? await prisma.playlist.create({
     data: {
-      title: cleanText(formData.get("newPlaylistTitle")) || sourcePlaylistTitle,
-      shortTitle: cleanText(formData.get("newPlaylistTitle")) || sourcePlaylistTitle,
+      title: requestedPlaylistTitle,
+      shortTitle: requestedPlaylistTitle,
       description: playlistDescription,
       youtubePlaylistUrl: sourcePlaylistUrl,
       thumbnailUrl: playlistThumbnail,
@@ -455,7 +474,7 @@ export async function importYouTubePlaylistAction(formData: FormData) {
     },
     include: { language: true, module: true }
   });
-  if (existingPlaylist) {
+  if (targetPlaylist) {
     await prisma.playlist.update({
       where: { id: playlist.id },
       data: {

@@ -4,8 +4,9 @@ import { ArrowLeft, ListVideo } from "lucide-react";
 import { PublicFooter } from "@/components/public-footer";
 import { PublicHeader } from "@/components/public-header";
 import { YouTubePlaylistCard } from "@/components/youtube-playlist-card";
+import { publicPlaylistShelfTitle, selectPublicPlaylists } from "@/lib/playlist-organization";
 import { prisma } from "@/lib/prisma";
-import { youtubeStylePlaylists, youtubeStyleShelves } from "@/lib/resource-taxonomy";
+import { youtubeStyleShelves } from "@/lib/resource-taxonomy";
 
 export default async function LanguagePlaylistsPage({ params }: { params: Promise<{ language: string }> }) {
   const { language: code } = await params;
@@ -16,9 +17,7 @@ export default async function LanguagePlaylistsPage({ params }: { params: Promis
     include: { language: true, _count: { select: { videos: true } } },
     orderBy: [{ sortOrder: "asc" }, { title: "asc" }]
   });
-  const youtubeTitleSet = new Set<string>(youtubeStylePlaylists.map((playlist) => playlist.title));
-  const shelfByLanguageTitle = new Map(youtubeStylePlaylists.map((playlist) => [`${playlist.language}:${playlist.title}`, playlist.shelf]));
-  const visiblePlaylists = playlists.filter((playlist) => youtubeTitleSet.has(playlist.title) || playlist.id.startsWith("yt_"));
+  const visiblePlaylists = selectPublicPlaylists(playlists);
   const shelves = youtubeStyleShelves.filter((shelf) => shelf.language === language.name);
 
   return (
@@ -40,7 +39,7 @@ export default async function LanguagePlaylistsPage({ params }: { params: Promis
             <h2 className="mb-4 text-2xl font-extrabold text-[#243447]">{shelf.title}</h2>
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {visiblePlaylists
-                .filter((playlist) => playlist.id.startsWith("yt_") ? shelf.title === shelves[0]?.title : shelfByLanguageTitle.get(`${language.name}:${playlist.title}`) === shelf.title)
+                .filter((playlist) => publicPlaylistShelfTitle(playlist) === shelf.title)
                 .map((playlist) => <YouTubePlaylistCard key={`${shelf.title}-${playlist.id}`} playlist={playlist} />)}
             </div>
           </section>

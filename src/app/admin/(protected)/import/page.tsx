@@ -1,6 +1,7 @@
 import { bulkImportVideosAction, importYouTubePlaylistAction, upsertVideoAction } from "@/app/admin/actions";
 import { Notice } from "@/components/admin-shell";
 import { FormActions, PageTitle, RegionAudienceFields, SelectField, TextArea, TextField, VisibilityField } from "@/components/admin-form";
+import { publicPlaylistOptionLabel, selectPublicPlaylists } from "@/lib/playlist-organization";
 import { prisma } from "@/lib/prisma";
 import { resourceFormats } from "@/lib/resource-taxonomy";
 
@@ -9,8 +10,13 @@ export default async function ImportPage({ searchParams }: { searchParams: Promi
   const [languages, categories, playlists] = await Promise.all([
     prisma.language.findMany({ where: { isActive: true }, orderBy: { sortOrder: "asc" } }),
     prisma.module.findMany({ where: { isActive: true }, orderBy: { sortOrder: "asc" } }),
-    prisma.playlist.findMany({ orderBy: { title: "asc" }, include: { language: true } })
+    prisma.playlist.findMany({
+      where: { visibility: { not: "Hidden" } },
+      orderBy: [{ sortOrder: "asc" }, { title: "asc" }],
+      include: { language: true, _count: { select: { videos: true } } }
+    })
   ]);
+  const publicPlaylists = selectPublicPlaylists(playlists);
   const apiKey = Boolean(process.env.YOUTUBE_API_KEY);
   return (
     <div>
@@ -33,7 +39,7 @@ export default async function ImportPage({ searchParams }: { searchParams: Promi
         <TextField label="Default thumbnail/fallback thumbnail" name="thumbnailUrl" />
         <SelectField label="Add to playlist" name="targetPlaylistId">
           <option value="">Create a new playlist from this YouTube playlist</option>
-          {playlists.map((item) => <option key={item.id} value={item.id}>{item.title}{item.language ? ` - ${item.language.name}` : ""}</option>)}
+          {publicPlaylists.map((item) => <option key={item.id} value={item.id}>{publicPlaylistOptionLabel(item)}</option>)}
         </SelectField>
         <TextField label="Create playlist title optional" name="newPlaylistTitle" />
         <SelectField label="Resource Type" name="resourceType" defaultValue="Video">
@@ -55,7 +61,7 @@ export default async function ImportPage({ searchParams }: { searchParams: Promi
           <SelectField label="Language" name="languageId" required><option value="">Choose language</option>{languages.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</SelectField>
           <SelectField label="Resource Format" name="resourceFormat" defaultValue="Doodle">{resourceFormats.map((item) => <option key={item} value={item}>{item}</option>)}</SelectField>
           <SelectField label="Category" name="moduleId" required><option value="">Choose category</option>{categories.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</SelectField>
-          <SelectField label="Assign to playlist" name="playlistIds"><option value="">No playlist yet</option>{playlists.map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}</SelectField>
+          <SelectField label="Assign to playlist" name="playlistIds"><option value="">No playlist yet</option>{publicPlaylists.map((item) => <option key={item.id} value={item.id}>{publicPlaylistOptionLabel(item)}</option>)}</SelectField>
           <RegionAudienceFields audience="Trainers" />
           <TextField label="Tags" name="tags" />
           <input type="hidden" name="visibility" value="Draft" />
@@ -64,7 +70,7 @@ export default async function ImportPage({ searchParams }: { searchParams: Promi
         <form action={bulkImportVideosAction} className="grid gap-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-[#edf0f3] sm:p-6">
           <h2 className="text-xl font-bold">Bulk import video links</h2>
           <TextArea label="YouTube video URLs, one per line" name="urls" />
-          <SelectField label="Assign to playlist optional" name="playlistId"><option value="">No playlist yet</option>{playlists.map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}</SelectField>
+          <SelectField label="Assign to playlist optional" name="playlistId"><option value="">No playlist yet</option>{publicPlaylists.map((item) => <option key={item.id} value={item.id}>{publicPlaylistOptionLabel(item)}</option>)}</SelectField>
           <SelectField label="Language" name="languageId"><option value="">Choose language</option>{languages.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</SelectField>
           <SelectField label="Resource Format" name="resourceFormat" defaultValue="Doodle">{resourceFormats.map((item) => <option key={item} value={item}>{item}</option>)}</SelectField>
           <SelectField label="Category" name="moduleId"><option value="">Choose category</option>{categories.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</SelectField>

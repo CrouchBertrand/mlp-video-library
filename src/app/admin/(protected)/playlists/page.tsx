@@ -4,17 +4,22 @@ import { deletePlaylistAction } from "@/app/admin/actions";
 import { Notice } from "@/components/admin-shell";
 import { ConfirmDeleteButton } from "@/components/confirm-delete-button";
 import { SmartImage } from "@/components/smart-image";
+import { selectPublicPlaylists } from "@/lib/playlist-organization";
 import { prisma } from "@/lib/prisma";
 import { resourceImage } from "@/lib/resource-taxonomy";
 
 export default async function CollectionsPage({ searchParams }: { searchParams: Promise<{ success?: string; error?: string; q?: string }> }) {
   const params = await searchParams;
-  const [collections, languages, categories, total] = await Promise.all([
-    prisma.playlist.findMany({ orderBy: { sortOrder: "asc" }, include: { language: true, module: true, videos: true }, take: 8 }),
+  const [allPlaylists, languages, categories] = await Promise.all([
+    prisma.playlist.findMany({
+      where: { visibility: { not: "Hidden" } },
+      orderBy: [{ sortOrder: "asc" }, { title: "asc" }],
+      include: { language: true, module: true, _count: { select: { videos: true } } }
+    }),
     prisma.language.findMany({ orderBy: { sortOrder: "asc" } }),
-    prisma.module.findMany({ orderBy: { sortOrder: "asc" } }),
-    prisma.playlist.count()
+    prisma.module.findMany({ orderBy: { sortOrder: "asc" } })
   ]);
+  const playlists = selectPublicPlaylists(allPlaylists);
   return (
     <div>
       <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
@@ -32,19 +37,19 @@ export default async function CollectionsPage({ searchParams }: { searchParams: 
         <table className="w-full min-w-[860px] text-left">
           <thead className="bg-[#fbfcfd] text-[11px] uppercase tracking-wide text-[#526579]"><tr><th className="px-6 py-4">Playlist Details</th><th className="px-6 py-4">Statistics</th><th className="px-6 py-4">Status</th><th className="px-6 py-4">Featured</th><th className="px-6 py-4 text-right">Actions</th></tr></thead>
           <tbody className="divide-y divide-[#edf0f3]">
-            {collections.map((collection) => (
-              <tr key={collection.id}>
-                <td className="px-6 py-4"><div className="flex items-center gap-4"><div className="relative h-14 w-24 overflow-hidden rounded-md bg-[#f2f4f7]"><SmartImage src={collection.uploadedThumbnailPath || collection.thumbnailUrl || resourceImage({ language: collection.language })} alt="" fill className="h-full w-full object-cover" /></div><div><div className="font-extrabold">{collection.title}</div><div className="mt-1 text-xs font-semibold text-[#6b7c8f]">{collection.language?.name ?? "No language"} - {collection.module?.name ?? "No category"}</div></div></div></td>
-                <td className="px-6 py-4 text-sm text-[#526579]"><strong>{collection.videos.length} Resources</strong><br />Order: {collection.sortOrder}</td>
-                <td className="px-6 py-4"><StatusBadge status={collection.visibility} /></td>
-                <td className="px-6 py-4"><Home className={`size-4 ${collection.featured ? "fill-[#a64026] text-[#a64026]" : "text-[#8b9bad]"}`} /></td>
-                <td className="px-6 py-4"><div className="flex justify-end gap-5"><Link href={`/admin/playlists/new?edit=${collection.id}`} className="text-[#a64026]"><Pencil className="size-4" /></Link><form action={deletePlaylistAction}><input type="hidden" name="id" value={collection.id} /><ConfirmDeleteButton compact label="Delete playlist" message={`Delete "${collection.title}"? Videos will not be deleted.`} /></form></div></td>
+            {playlists.map((playlist) => (
+              <tr key={playlist.id}>
+                <td className="px-6 py-4"><div className="flex items-center gap-4"><div className="relative h-14 w-24 overflow-hidden rounded-md bg-[#f2f4f7]"><SmartImage src={playlist.uploadedThumbnailPath || playlist.thumbnailUrl || resourceImage({ language: playlist.language })} alt="" fill className="h-full w-full object-cover" /></div><div><div className="font-extrabold">{playlist.title}</div><div className="mt-1 text-xs font-semibold text-[#6b7c8f]">{playlist.language?.name ?? "No language"} - {playlist.module?.name ?? "No category"}</div></div></div></td>
+                <td className="px-6 py-4 text-sm text-[#526579]"><strong>{playlist._count.videos} Resources</strong><br />Order: {playlist.sortOrder}</td>
+                <td className="px-6 py-4"><StatusBadge status={playlist.visibility} /></td>
+                <td className="px-6 py-4"><Home className={`size-4 ${playlist.featured ? "fill-[#a64026] text-[#a64026]" : "text-[#8b9bad]"}`} /></td>
+                <td className="px-6 py-4"><div className="flex justify-end gap-5"><Link href={`/admin/playlists/new?edit=${playlist.id}`} className="text-[#a64026]"><Pencil className="size-4" /></Link><form action={deletePlaylistAction}><input type="hidden" name="id" value={playlist.id} /><ConfirmDeleteButton compact label="Delete playlist" message={`Delete "${playlist.title}"? Videos will not be deleted.`} /></form></div></td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      <div className="mt-6 flex items-center justify-between text-sm text-[#526579]"><span>Showing {collections.length} of {total} playlists</span><div className="flex gap-2"><button className="mlp-btn-outline">Previous</button><button className="mlp-btn-outline">Next</button></div></div>
+      <div className="mt-6 text-sm text-[#526579]">Showing {playlists.length} public playlists</div>
     </div>
   );
 }
