@@ -49,21 +49,13 @@ export const resourceTypes = ["Video", "Document", "Activity", "Script", "Audio"
 
 export const resourceFormats = [
   "Image Diaries",
+  "Animations",
   "Doodle",
-  "Animation",
-  "VideoScribe",
-  "Global",
-  "Vocations",
-  "Online",
-  "Interview",
-  "Documentary Clip",
-  "Facilitator Video",
-  "Script / Transcript",
-  "Discussion Prompt",
-  "Facilitator Guide"
+  "Video Scribe",
+  "Online"
 ];
 
-export const visibleResourceFormats = ["Image Diaries", "Doodle", "Animation", "VideoScribe", "Global", "Vocations", "Online"];
+export const visibleResourceFormats = resourceFormats;
 
 export function normalizeResourceFormat(value?: string | null) {
   if (!value) return "Doodle";
@@ -71,7 +63,8 @@ export function normalizeResourceFormat(value?: string | null) {
   const lower = trimmed.toLowerCase();
   if (lower === "doodle video" || lower === "doodle") return "Doodle";
   if (lower === "image diary" || lower === "image diaries") return "Image Diaries";
-  if (lower === "videoscribe" || lower === "video scribe") return "VideoScribe";
+  if (lower === "animation" || lower === "animations") return "Animations";
+  if (lower === "videoscribe" || lower === "video scribe") return "Video Scribe";
   return trimmed;
 }
 
@@ -79,7 +72,8 @@ export function resourceFormatAliases(value?: string | null) {
   const normalized = normalizeResourceFormat(value);
   if (normalized === "Doodle") return ["Doodle", "Doodle Video"];
   if (normalized === "Image Diaries") return ["Image Diaries", "Image Diary"];
-  if (normalized === "VideoScribe") return ["VideoScribe", "Video Scribe"];
+  if (normalized === "Animations") return ["Animations", "Animation"];
+  if (normalized === "Video Scribe") return ["Video Scribe", "VideoScribe"];
   return [normalized];
 }
 
@@ -100,7 +94,8 @@ export function resourceFormatFromSlug(slug: string) {
   if (direct) return normalizeResourceFormat(direct);
   if (slug === "doodle-video") return "Doodle";
   if (slug === "image-diary") return "Image Diaries";
-  if (slug === "video-scribe") return "VideoScribe";
+  if (slug === "animation") return "Animations";
+  if (slug === "video-scribe" || slug === "videoscribe") return "Video Scribe";
   return null;
 }
 

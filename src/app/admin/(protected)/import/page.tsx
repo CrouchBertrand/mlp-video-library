@@ -1,4 +1,4 @@
-import { bulkImportVideosAction, importYouTubePlaylistAction, upsertVideoAction } from "@/app/admin/actions";
+import { bulkImportVideosAction, importYouTubePlaylistAction, updateImportedPlaylistFormatAction, upsertVideoAction } from "@/app/admin/actions";
 import { Notice } from "@/components/admin-shell";
 import { FormActions, PageTitle, RegionAudienceFields, SelectField, TextArea, TextField, VisibilityField } from "@/components/admin-form";
 import { prisma } from "@/lib/prisma";
@@ -6,11 +6,52 @@ import { PROGRAM_NAME, resourceCategories, resourceFormats } from "@/lib/resourc
 
 export default async function ImportPage({ searchParams }: { searchParams: Promise<{ success?: string; error?: string }> }) {
   const params = await searchParams;
-  const [languages, categories, playlists] = await Promise.all([
+  const [languages, categories, playlists, importedResources] = await Promise.all([
     prisma.language.findMany({ where: { isActive: true }, orderBy: { sortOrder: "asc" } }),
     prisma.module.findMany({ where: { isActive: true }, orderBy: { sortOrder: "asc" } }),
-    prisma.playlist.findMany({ orderBy: { title: "asc" } })
+    prisma.playlist.findMany({ orderBy: { title: "asc" } }),
+    prisma.video.findMany({
+      where: { sourcePlaylistId: { not: null } },
+      orderBy: [{ sourcePlaylistId: "asc" }, { orderIndex: "asc" }],
+      select: {
+        id: true,
+        title: true,
+        sourcePlaylistId: true,
+        sourcePlaylistUrl: true,
+        resourceFormat: true,
+        language: { select: { name: true } }
+      }
+    })
   ]);
+  const importedCollections = playlists.filter((playlist) => playlist.id.startsWith("yt_"));
+  const collectionBySourceId = new Map(importedCollections.map((playlist) => [playlist.id.replace(/^yt_/, ""), playlist]));
+  const importedGroups = Array.from(
+    importedResources.reduce((groups, resource) => {
+      if (!resource.sourcePlaylistId) return groups;
+      const group = groups.get(resource.sourcePlaylistId) ?? {
+        sourcePlaylistId: resource.sourcePlaylistId,
+        sourcePlaylistUrl: resource.sourcePlaylistUrl,
+        title: collectionBySourceId.get(resource.sourcePlaylistId)?.title ?? `YouTube Playlist ${resource.sourcePlaylistId}`,
+        language: resource.language?.name ?? "No language",
+        count: 0,
+        formats: new Set<string>(),
+        firstTitles: [] as string[]
+      };
+      group.count += 1;
+      group.formats.add(resource.resourceFormat);
+      if (group.firstTitles.length < 3) group.firstTitles.push(resource.title);
+      groups.set(resource.sourcePlaylistId, group);
+      return groups;
+    }, new Map<string, {
+      sourcePlaylistId: string;
+      sourcePlaylistUrl: string | null;
+      title: string;
+      language: string;
+      count: number;
+      formats: Set<string>;
+      firstTitles: string[];
+    }>())
+  ).map(([, group]) => group);
   const apiKey = Boolean(process.env.YOUTUBE_API_KEY);
   return (
     <div>
@@ -49,6 +90,50 @@ export default async function ImportPage({ searchParams }: { searchParams: Promi
           <FormActions submitLabel={apiKey ? "Import YouTube Playlist" : "Import requires API key"} cancelHref="/admin" />
         </div>
       </form>
+
+      <section className="mb-8 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-[#edf0f3] sm:p-6 lg:p-7">
+        <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="text-xl font-extrabold">Imported YouTube playlists</h2>
+            <p className="mt-2 text-sm leading-relaxed text-[#6b7c8f]">
+              Each imported playlist stays grouped under its original YouTube playlist name. Move the whole imported group into a resource format with one click.
+            </p>
+          </div>
+        </div>
+        {importedGroups.length === 0 ? (
+          <div className="rounded-lg border border-dashed border-[#d8dde5] bg-[#fbfcfd] px-4 py-8 text-sm font-bold text-[#6b7c8f]">
+            No YouTube playlists have been imported yet.
+          </div>
+        ) : (
+          <div className="grid gap-4">
+            {importedGroups.map((group) => (
+              <div key={group.sourcePlaylistId} className="grid gap-4 rounded-xl border border-[#edf0f3] p-4 lg:grid-cols-[1fr_260px] lg:items-center">
+                <div>
+                  <div className="text-lg font-extrabold text-[#243447]">{group.title}</div>
+                  <div className="mt-1 text-sm font-semibold text-[#6b7c8f]">
+                    {group.language} - {group.count} resources - Current format{group.formats.size === 1 ? "" : "s"}: {Array.from(group.formats).join(", ")}
+                  </div>
+                  {group.sourcePlaylistUrl && (
+                    <a href={group.sourcePlaylistUrl} target="_blank" rel="noreferrer" className="mt-2 inline-flex text-sm font-bold text-[#a64026]">
+                      Open original YouTube playlist
+                    </a>
+                  )}
+                  <div className="mt-3 text-xs leading-relaxed text-[#6b7c8f]">
+                    Sample resources: {group.firstTitles.join("; ")}
+                  </div>
+                </div>
+                <form action={updateImportedPlaylistFormatAction} className="grid gap-3">
+                  <input type="hidden" name="sourcePlaylistId" value={group.sourcePlaylistId} />
+                  <SelectField label="Move entire playlist to" name="resourceFormat" defaultValue={Array.from(group.formats)[0] ?? "Image Diaries"}>
+                    {resourceFormats.map((item) => <option key={item} value={item}>{item}</option>)}
+                  </SelectField>
+                  <button type="submit" className="mlp-btn-primary w-full">Apply to all {group.count}</button>
+                </form>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <form action={upsertVideoAction} className="grid gap-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-[#edf0f3] sm:p-6">

@@ -71,9 +71,9 @@ function videoId(index: number) {
 }
 
 function formatFor(category: string, index: number) {
-  if (category === "Introduction") return "Global";
-  if (category === "Consumer Literacy") return "Animation";
-  if (category === "Entrepreneurial Literacy") return index % 2 === 0 ? "Doodle" : "VideoScribe";
+  if (category === "Introduction") return "Online";
+  if (category === "Consumer Literacy") return "Animations";
+  if (category === "Entrepreneurial Literacy") return index % 2 === 0 ? "Doodle" : "Video Scribe";
   return resourceFormats[index % resourceFormats.length];
 }
 
@@ -149,6 +149,10 @@ async function ensureDefaults() {
 
   await prisma.video.updateMany({ where: { resourceFormat: "Doodle Video" }, data: { resourceFormat: "Doodle" } });
   await prisma.video.updateMany({ where: { resourceFormat: "Image Diary" }, data: { resourceFormat: "Image Diaries" } });
+  await prisma.video.updateMany({ where: { resourceFormat: "Animation" }, data: { resourceFormat: "Animations" } });
+  await prisma.video.updateMany({ where: { resourceFormat: "VideoScribe" }, data: { resourceFormat: "Video Scribe" } });
+  await prisma.video.updateMany({ where: { resourceFormat: "Global" }, data: { resourceFormat: "Online" } });
+  await prisma.video.updateMany({ where: { resourceFormat: "Vocations" }, data: { resourceFormat: "Online" } });
 }
 
 async function seedStarterResourcesIfEmpty() {

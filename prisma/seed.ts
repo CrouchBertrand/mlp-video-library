@@ -48,9 +48,9 @@ function videoId(index: number) {
 }
 
 function formatFor(category: string, index: number) {
-  if (category === "Introduction") return "Facilitator Video";
-  if (category === "Consumer Literacy") return "Animation";
-  if (category === "Entrepreneurial Literacy") return index % 2 === 0 ? "Doodle" : "VideoScribe";
+  if (category === "Introduction") return "Online";
+  if (category === "Consumer Literacy") return "Animations";
+  if (category === "Entrepreneurial Literacy") return index % 2 === 0 ? "Doodle" : "Video Scribe";
   return index % 3 === 0 ? "Image Diaries" : "Doodle";
 }
 
