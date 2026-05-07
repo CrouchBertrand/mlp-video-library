@@ -304,9 +304,24 @@ export async function upsertVideoAction(formData: FormData) {
 
 export async function deleteVideoAction(formData: FormData) {
   await guard();
-  await prisma.video.delete({ where: { id: cleanText(formData.get("id")) } });
+  const id = cleanText(formData.get("id"));
+  if (!id) redirect("/admin/videos?error=Resource was not found. Reload the page and try again.");
+  let deleted = 0;
+  try {
+    const result = await prisma.$transaction(async (tx) => {
+      await tx.playlistVideo.deleteMany({ where: { videoId: id } });
+      return tx.video.deleteMany({ where: { id } });
+    });
+    deleted = result.count;
+  } catch (error) {
+    console.error("Video delete failed", error);
+    redirect("/admin/videos?error=Could not delete that resource. Reload the page and try again.");
+  }
   revalidatePath("/");
-  redirect("/admin/videos?success=Resource deleted");
+  revalidatePath("/admin/videos");
+  revalidatePath("/playlists");
+  revalidatePath("/resources");
+  redirect(`/admin/videos?success=${encodeURIComponent(deleted ? "Resource deleted" : "Resource was already deleted.")}`);
 }
 
 export async function bulkManageVideosAction(formData: FormData) {
@@ -316,9 +331,22 @@ export async function bulkManageVideosAction(formData: FormData) {
 
   const action = cleanText(formData.get("bulkAction"));
   if (action === "delete") {
-    await prisma.video.deleteMany({ where: { id: { in: ids } } });
+    let deleted = 0;
+    try {
+      const result = await prisma.$transaction(async (tx) => {
+        await tx.playlistVideo.deleteMany({ where: { videoId: { in: ids } } });
+        return tx.video.deleteMany({ where: { id: { in: ids } } });
+      });
+      deleted = result.count;
+    } catch (error) {
+      console.error("Bulk video delete failed", error);
+      redirect("/admin/videos?error=Could not delete the selected resources. Reload the page and try again.");
+    }
     revalidatePath("/");
-    redirect(`/admin/videos?success=${ids.length} selected resources deleted`);
+    revalidatePath("/admin/videos");
+    revalidatePath("/playlists");
+    revalidatePath("/resources");
+    redirect(`/admin/videos?success=${deleted} selected resources deleted`);
   }
 
   const languageId = cleanOptional(formData.get("bulkLanguageId"));
