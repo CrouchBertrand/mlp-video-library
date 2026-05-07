@@ -6,6 +6,8 @@ import {
   resourceCategories,
   resourceFormats,
   resourceLanguages,
+  youtubeStylePlaylists,
+  youtubeStyleShelves,
   slugify
 } from "../src/lib/resource-taxonomy";
 
@@ -245,9 +247,109 @@ async function seedStarterResourcesIfEmpty() {
   }
 }
 
+async function ensureYoutubeStylePlaylists() {
+  const languages = await prisma.language.findMany();
+  const languageByName = new Map(languages.map((language) => [language.name, language]));
+  const category = await prisma.module.findFirst({ where: { name: "General Marketplace Literacy" } });
+
+  for (let i = 0; i < youtubeStyleShelves.length; i++) {
+    const shelf = youtubeStyleShelves[i];
+    const language = languageByName.get(shelf.language);
+    if (!language) continue;
+    await prisma.homepageSection.upsert({
+      where: { id: `shelf_${slugify(shelf.title)}` },
+      update: {
+        title: shelf.title,
+        description: `Marketplace Literacy playlists in ${shelf.language}.`,
+        filterLanguageId: language.id,
+        layout: "row",
+        sortOrder: i + 1,
+        visibility: "Published"
+      },
+      create: {
+        id: `shelf_${slugify(shelf.title)}`,
+        title: shelf.title,
+        description: `Marketplace Literacy playlists in ${shelf.language}.`,
+        filterLanguageId: language.id,
+        layout: "row",
+        sortOrder: i + 1,
+        visibility: "Published"
+      }
+    });
+  }
+
+  for (let i = 0; i < youtubeStylePlaylists.length; i++) {
+    const item = youtubeStylePlaylists[i];
+    const language = languageByName.get(item.language);
+    if (!language) continue;
+    const playlistId = `playlist_${i + 1}_${slugify(`${item.language}-${item.title}`)}`;
+    const playlist = await prisma.playlist.upsert({
+      where: { id: playlistId },
+      update: {
+        title: item.title,
+        shortTitle: item.title,
+        thumbnailUrl: language.thumbnailPath,
+        languageId: language.id,
+        moduleId: category?.id,
+        visibility: "Public",
+        featured: true,
+        sortOrder: i + 1
+      },
+      create: {
+        id: playlistId,
+        title: item.title,
+        shortTitle: item.title,
+        description: `YouTube-style playlist shelf item for ${item.language}.`,
+        thumbnailUrl: language.thumbnailPath,
+        languageId: language.id,
+        moduleId: category?.id,
+        region: "Global",
+        audience: "General",
+        tags: `${item.language}, ${item.shelf}, Playlist`,
+        visibility: "Public",
+        featured: true,
+        sortOrder: i + 1
+      }
+    });
+    const existingVideos = await prisma.playlistVideo.count({ where: { playlistId: playlist.id } });
+    if (existingVideos === 0) {
+      for (let videoIndex = 0; videoIndex < 3; videoIndex++) {
+        const youtubeVideoId = videoId(i + videoIndex);
+        const title = `${item.title} - Video ${videoIndex + 1}`;
+        const video = await prisma.video.create({
+          data: {
+            title,
+            resourceTitle: title,
+            description: `Video placeholder for ${item.title}.`,
+            youtubeUrl: `https://www.youtube.com/watch?v=${youtubeVideoId}`,
+            youtubeVideoId,
+            embedUrl: `https://www.youtube.com/embed/${youtubeVideoId}`,
+            thumbnailUrl: language.thumbnailPath,
+            program: PROGRAM_NAME,
+            category: "Playlist",
+            resourceType: "Video",
+            resourceFormat: "Online",
+            orderIndex: videoIndex + 1,
+            isPublished: true,
+            languageId: language.id,
+            moduleId: category?.id,
+            region: "Global",
+            audience: "General",
+            tags: `${slugify(item.title)}, ${item.language}`,
+            duration: "08:45",
+            visibility: "Published"
+          }
+        });
+        await prisma.playlistVideo.create({ data: { playlistId: playlist.id, videoId: video.id, sortOrder: videoIndex + 1 } });
+      }
+    }
+  }
+}
+
 async function main() {
   await ensureDefaults();
   await seedStarterResourcesIfEmpty();
+  await ensureYoutubeStylePlaylists();
 }
 
 main()

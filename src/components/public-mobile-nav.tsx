@@ -7,7 +7,7 @@ import { ArrowLeft, GraduationCap, Home, LogIn, Menu, Search, X } from "lucide-r
 
 const navItems = [
   { href: "/", label: "Home", icon: Home },
-  { href: "/resources", label: "Browse Resources", icon: GraduationCap },
+  { href: "/resources", label: "Browse Playlists", icon: GraduationCap },
   { href: "/search", label: "Search Library", icon: Search }
 ];
 
@@ -73,7 +73,7 @@ export function PublicMobileNav() {
                 </button>
               </div>
               <p className="text-sm leading-relaxed text-[#6b7c8f]">
-                Start by choosing a language, then a resource format, category, and resource.
+                Browse language shelves, open a playlist, then choose a video.
               </p>
             </div>
 
@@ -104,7 +104,7 @@ export function PublicMobileNav() {
 
               <div className="rounded-xl bg-[#f7f8fa] p-4 ring-1 ring-[#edf0f3]">
                 <p className="text-sm font-extrabold text-[#243447]">For MLP staff</p>
-                <p className="mt-1 text-sm leading-relaxed text-[#6b7c8f]">Use the admin portal to manage resources, imports, categories, and settings.</p>
+                <p className="mt-1 text-sm leading-relaxed text-[#6b7c8f]">Use the admin portal to manage playlists, videos, imports, and settings.</p>
                 <Link href="/admin/login" onClick={() => setOpen(false)} className="mlp-btn-primary mt-4 w-full">
                   <LogIn className="size-4" /> Admin Login
                 </Link>

@@ -57,6 +57,65 @@ export const resourceFormats = [
 
 export const visibleResourceFormats = resourceFormats;
 
+export const youtubeStyleShelves = [
+  { title: "Marketplace Literacy - English", language: "English" },
+  { title: "Marketplace Literacy Africa English", language: "English" },
+  { title: "Marketplace Literacy Training Videos - English & Spanish", language: "English" },
+  { title: "Marketplace Literacy Training Hindi", language: "Hindi" },
+  { title: "Marketplace Literacy - Hindi", language: "Hindi" },
+  { title: "Marketplace Literacy - Spanish", language: "Spanish" },
+  { title: "Marketplace Literacy - French", language: "French" },
+  { title: "Marketplace Literacy - Swahili", language: "Swahili" },
+  { title: "Marketplace Literacy - Telugu", language: "Telugu" }
+] as const;
+
+export const youtubeStylePlaylists = [
+  { title: "Marketplace Literacy - Global", language: "English", shelf: "Marketplace Literacy - English" },
+  { title: "Online Marketplace Literacy - Global", language: "English", shelf: "Marketplace Literacy - English" },
+  { title: "Marketplace Literacy Vocations - English", language: "English", shelf: "Marketplace Literacy - English" },
+  { title: "Marketplace Literacy - Animation", language: "English", shelf: "Marketplace Literacy - English" },
+  { title: "Marketplace Literacy - Videoscribe English", language: "English", shelf: "Marketplace Literacy - English" },
+  { title: "Marketplace Literacy - Global Doodle", language: "English", shelf: "Marketplace Literacy - English" },
+  { title: "Marketplace Literacy - Youth USA", language: "English", shelf: "Marketplace Literacy - English" },
+  { title: "Online Marketplace Literacy - India - English", language: "English", shelf: "Marketplace Literacy - English" },
+  { title: "Marketplace Literacy - Youth Africa", language: "English", shelf: "Marketplace Literacy Africa English" },
+  { title: "Marketplace Literacy - Male Youth Africa", language: "English", shelf: "Marketplace Literacy Africa English" },
+  { title: "Marketplace Literacy - Africa", language: "English", shelf: "Marketplace Literacy Africa English" },
+  { title: "Marketplace Literacy - Female Youth Africa", language: "English", shelf: "Marketplace Literacy Africa English" },
+  { title: "Marketplace Literacy Mexico English", language: "English", shelf: "Marketplace Literacy Training Videos - English & Spanish" },
+  { title: "Marketplace Literacy USA Facilitator Training", language: "English", shelf: "Marketplace Literacy Training Videos - English & Spanish" },
+  { title: "Teaching - Marketplace Literacy", language: "English", shelf: "Marketplace Literacy Training Videos - English & Spanish" },
+  { title: "Training - Marketplace Literacy", language: "English", shelf: "Marketplace Literacy Training Videos - English & Spanish" },
+  { title: "Marketplace Literacy - Doodle Spanish", language: "Spanish", shelf: "Marketplace Literacy - Spanish" },
+  { title: "Marketplace Literacy - Latin America - Spanish", language: "Spanish", shelf: "Marketplace Literacy - Spanish" },
+  { title: "Teaching - Marketplace Literacy", language: "Spanish", shelf: "Marketplace Literacy - Spanish" },
+  { title: "Training - Marketplace Literacy", language: "Spanish", shelf: "Marketplace Literacy - Spanish" },
+  { title: "Emprendimiento de Mercados por Internet", language: "Spanish", shelf: "Marketplace Literacy - Spanish" },
+  { title: "Educación sobre Sostenibilidad", language: "Spanish", shelf: "Marketplace Literacy - Spanish" },
+  { title: "Profesiones - Marketplace Literacy Vocations", language: "Spanish", shelf: "Marketplace Literacy - Spanish" },
+  { title: "Training Videos Bihar बाज़ार साक्षरता लिट्स - युवा + महिलाएं", language: "Hindi", shelf: "Marketplace Literacy Training Hindi" },
+  { title: "Training Videos Bihar बाज़ार साक्षरता लिट्स - वयस्क", language: "Hindi", shelf: "Marketplace Literacy Training Hindi" },
+  { title: "Training Videos CG IIT - IBITF बाजार साक्षरता", language: "Hindi", shelf: "Marketplace Literacy Training Hindi" },
+  { title: "Training Videos Bihar - India बाज़ार साक्षरता लिट्स", language: "Hindi", shelf: "Marketplace Literacy Training Hindi" },
+  { title: "Training Bihar बाज़ार साक्षरता मॉड्यूल", language: "Hindi", shelf: "Marketplace Literacy Training Hindi" },
+  { title: "Complete Training Videos बाजार साक्षरता प्रशिक्षण वीडियोज", language: "Hindi", shelf: "Marketplace Literacy Training Hindi" },
+  { title: "Marketplace Literacy - Modules - Youth and Women", language: "Hindi", shelf: "Marketplace Literacy - Hindi" },
+  { title: "ऑनलाइन बाज़ार साक्षरता", language: "Hindi", shelf: "Marketplace Literacy - Hindi" },
+  { title: "मार्केटप्लेस साक्षरता", language: "Hindi", shelf: "Marketplace Literacy - Hindi" },
+  { title: "बाजार साक्षरता व्यवसाय", language: "Hindi", shelf: "Marketplace Literacy - Hindi" },
+  { title: "बाजार साक्षरता - मॉड्यूल - वयस्क", language: "Hindi", shelf: "Marketplace Literacy - Hindi" },
+  { title: "बाजार साक्षरता - मॉड्यूल - पुरुष", language: "Hindi", shelf: "Marketplace Literacy - Hindi" },
+  { title: "Elimu ya Masoko", language: "Swahili", shelf: "Marketplace Literacy - Swahili" },
+  { title: "Elimu Ya Masoko na Stadi za Kazi", language: "Swahili", shelf: "Marketplace Literacy - Swahili" },
+  { title: "Elimu ya Uendelevu", language: "Swahili", shelf: "Marketplace Literacy - Swahili" },
+  { title: "Littératie Du Marché", language: "French", shelf: "Marketplace Literacy - French" },
+  { title: "Littératie Du Marché et Métiers", language: "French", shelf: "Marketplace Literacy - French" },
+  { title: "Littératie Du Marché En Ligne", language: "French", shelf: "Marketplace Literacy - French" },
+  { title: "Animation - French", language: "French", shelf: "Marketplace Literacy - French" },
+  { title: "Marketplace Literacy Vocations - Telugu", language: "Telugu", shelf: "Marketplace Literacy - Telugu" },
+  { title: "Marketplace Literacy - Telugu", language: "Telugu", shelf: "Marketplace Literacy - Telugu" }
+] as const;
+
 export function normalizeResourceFormat(value?: string | null) {
   if (!value) return "Doodle";
   const trimmed = value.trim();
