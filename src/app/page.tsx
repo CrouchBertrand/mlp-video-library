@@ -33,23 +33,25 @@ export default async function Home({
     <main className="mlp-page">
       <PublicHeader />
       <section className="border-b border-[#e5e7eb] bg-[#f2f4f7]">
-        <div className="mlp-container flex flex-col items-center py-10 text-center sm:py-12 lg:py-16">
-          <p className="mb-3 text-xs font-extrabold uppercase tracking-wide text-[#a64026] sm:text-sm">Educator and facilitator resource library</p>
-          <h1 className="max-w-4xl text-3xl font-extrabold tracking-tight text-[#243447] sm:text-4xl lg:text-[44px]">
+        <div className="mlp-container flex flex-col items-center py-8 text-center sm:py-12 lg:py-16">
+          <p className="mb-3 max-w-[260px] text-xs font-extrabold uppercase tracking-wide text-[#a64026] sm:max-w-none sm:text-sm">
+            Educator and facilitator resource library
+          </p>
+          <h1 className="max-w-4xl text-[34px] font-extrabold leading-tight tracking-tight text-[#243447] sm:text-4xl lg:text-[44px]">
             Marketplace Literacy Project Video Library
           </h1>
-          <p className="mt-4 max-w-3xl text-base leading-relaxed text-[#526579] sm:mt-6 sm:text-lg">
+          <p className="mt-4 max-w-2xl text-[17px] leading-relaxed text-[#526579] sm:mt-6 sm:text-lg">
             {settings?.siteDescription ?? "Browse organized Marketplace Literacy resources by language, resource format, and category."}
           </p>
           <div className="mt-6 grid w-full max-w-sm gap-3 sm:flex sm:max-w-none sm:flex-wrap sm:justify-center">
             <Link href="/resources" className="mlp-btn-primary">Browse Resources <ArrowRight className="size-4" /></Link>
             <Link href="/search" className="mlp-btn-outline">Search Library</Link>
           </div>
-          <form action="/search" className="mlp-card mt-7 w-full max-w-3xl p-4 sm:mt-9 sm:p-5">
+          <form action="/search" className="mlp-card mt-6 hidden w-full max-w-3xl p-4 sm:mt-9 sm:block sm:p-5">
             <div className="grid gap-3 md:grid-cols-[1fr_150px]">
               <label className="relative">
                 <Search className="pointer-events-none absolute left-4 top-3.5 size-4 text-[#8b9bad]" />
-                <input name="q" placeholder="Search by title, category, format, or tags..." className="mlp-input w-full border-0 bg-[#f7f8fa] pl-11" />
+                <input name="q" placeholder="Search by title, category, format, or tags..." className="mlp-input w-full border-0 bg-[#f7f8fa] pl-12" />
               </label>
               <button className="mlp-btn-primary">Search</button>
             </div>
@@ -69,6 +71,34 @@ export default async function Home({
               </select>
             </div>
           </form>
+          <details className="mlp-card mt-6 w-full max-w-sm overflow-hidden text-left sm:hidden">
+            <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between px-5 text-base font-extrabold text-[#243447] [&::-webkit-details-marker]:hidden">
+              Search and filters
+              <Search className="size-5 text-[#a64026]" />
+            </summary>
+            <form action="/search" className="border-t border-[#edf0f3] p-4">
+              <label className="block text-sm font-extrabold text-[#526579]">Search library</label>
+              <div className="relative mt-2">
+                <Search className="pointer-events-none absolute left-4 top-3.5 size-4 text-[#8b9bad]" />
+                <input name="q" placeholder="Search title, category, or tags" className="mlp-input w-full bg-[#f7f8fa] pl-12" />
+              </div>
+              <div className="mt-4 grid gap-3">
+                <select name="language" className="mlp-input w-full bg-[#f7f8fa]">
+                  <option value="">All Languages</option>
+                  {languages.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+                </select>
+                <select name="format" className="mlp-input w-full bg-[#f7f8fa]">
+                  <option value="">All Resource Formats</option>
+                  {visibleResourceFormats.map((item) => <option key={item} value={item}>{item}</option>)}
+                </select>
+                <select name="category" className="mlp-input w-full bg-[#f7f8fa]">
+                  <option value="">All Categories</option>
+                  {Array.from(new Set(resources.map((item) => item.category))).map((item) => <option key={item} value={item}>{item}</option>)}
+                </select>
+              </div>
+              <button className="mlp-btn-primary mt-4 w-full">Search</button>
+            </form>
+          </details>
         </div>
       </section>
 

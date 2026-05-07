@@ -108,6 +108,26 @@ textarea {
   padding: 0 16px;
 }
 
+.mlp-drawer-link {
+  display: flex;
+  min-height: 52px;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid #d8dde5;
+  border-radius: 12px;
+  background: #fff;
+  color: #243447;
+  padding: 0 16px;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.mlp-drawer-link.is-active {
+  border-color: #e5ccd0;
+  background: #fbeaea;
+  color: #a64026;
+}
+
 .mlp-input {
   height: 44px;
   border: 1px solid #d8dde5;
@@ -184,6 +204,12 @@ textarea {
   .mlp-soft-badge {
     font-size: 11px;
     padding: 7px 10px;
+  }
+
+  .mlp-btn-primary,
+  .mlp-btn-outline {
+    min-height: 48px;
+    border-radius: 10px;
   }
 }
 
