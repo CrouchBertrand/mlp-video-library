@@ -19,9 +19,6 @@ export default async function ResourcesPage() {
       <section className="mlp-container py-8 sm:py-12">
         <p className="mb-3 flex items-center gap-2 font-extrabold uppercase tracking-wide text-[#a64026]"><Languages className="size-4" /> Public Library</p>
         <h1 className="text-3xl font-extrabold sm:text-4xl">Choose a Language</h1>
-        <p className="mt-3 max-w-3xl text-base leading-relaxed text-[#6b7c8f] sm:text-lg">
-          Select a language to browse its playlists. The public library uses a simple Language to Playlist to Videos structure.
-        </p>
       </section>
       <section className="mlp-container pb-12">
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">

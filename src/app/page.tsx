@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Languages, Search } from "lucide-react";
+import { ArrowRight, Languages } from "lucide-react";
 import { PublicFooter } from "@/components/public-footer";
 import { PublicHeader } from "@/components/public-header";
 import { prisma } from "@/lib/prisma";
@@ -28,21 +28,13 @@ export default async function Home() {
           <p className="mt-4 max-w-3xl text-[17px] leading-relaxed text-[#526579] sm:text-lg">
             {settings?.siteDescription ?? "Browse Marketplace Literacy playlists by language."}
           </p>
-          <div className="mt-6 grid max-w-3xl gap-3 sm:flex sm:flex-wrap">
-            <Link href="/playlists" className="mlp-btn-primary">Browse Playlists <ArrowRight className="size-4" /></Link>
-            <Link href="/search" className="mlp-btn-outline"><Search className="size-4" /> Search Library</Link>
-          </div>
         </div>
       </section>
 
       <section className="mlp-container py-10 sm:py-12">
-        <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="mb-3 flex items-center gap-2 font-extrabold uppercase tracking-wide text-[#a64026]"><Languages className="size-4" /> Choose a language</p>
-            <h2 className="text-2xl font-extrabold sm:text-3xl">Language Shelves</h2>
-            <p className="mt-2 max-w-2xl text-[#6b7c8f]">Start with a language, then open a playlist. No extra folders or category tree.</p>
-          </div>
-          <Link href="/playlists" className="flex items-center gap-2 text-sm font-extrabold text-[#a64026]">All playlists <ArrowRight className="size-4" /></Link>
+        <div className="mb-7">
+          <p className="mb-3 flex items-center gap-2 font-extrabold uppercase tracking-wide text-[#a64026]"><Languages className="size-4" /> Choose a language</p>
+          <h2 className="text-2xl font-extrabold sm:text-3xl">Select a Language</h2>
         </div>
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {languages.map((language) => (
