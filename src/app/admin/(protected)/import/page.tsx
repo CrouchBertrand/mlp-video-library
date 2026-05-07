@@ -19,6 +19,7 @@ export default async function ImportPage({ searchParams }: { searchParams: Promi
         sourcePlaylistId: true,
         sourcePlaylistUrl: true,
         resourceFormat: true,
+        languageId: true,
         language: { select: { name: true } }
       }
     })
@@ -32,13 +33,16 @@ export default async function ImportPage({ searchParams }: { searchParams: Promi
         sourcePlaylistId: resource.sourcePlaylistId,
         sourcePlaylistUrl: resource.sourcePlaylistUrl,
         title: collectionBySourceId.get(resource.sourcePlaylistId)?.title ?? `YouTube Playlist ${resource.sourcePlaylistId}`,
-        language: resource.language?.name ?? "No language",
+        languages: new Set<string>(),
+        languageIds: new Set<string>(),
         count: 0,
         formats: new Set<string>(),
         firstTitles: [] as string[]
       };
       group.count += 1;
       group.formats.add(resource.resourceFormat);
+      group.languages.add(resource.language?.name ?? "No language");
+      if (resource.languageId) group.languageIds.add(resource.languageId);
       if (group.firstTitles.length < 3) group.firstTitles.push(resource.title);
       groups.set(resource.sourcePlaylistId, group);
       return groups;
@@ -46,7 +50,8 @@ export default async function ImportPage({ searchParams }: { searchParams: Promi
       sourcePlaylistId: string;
       sourcePlaylistUrl: string | null;
       title: string;
-      language: string;
+      languages: Set<string>;
+      languageIds: Set<string>;
       count: number;
       formats: Set<string>;
       firstTitles: string[];
@@ -96,7 +101,7 @@ export default async function ImportPage({ searchParams }: { searchParams: Promi
           <div>
             <h2 className="text-xl font-extrabold">Imported YouTube playlists</h2>
             <p className="mt-2 text-sm leading-relaxed text-[#6b7c8f]">
-              Each imported playlist stays grouped under its original YouTube playlist name. Move the whole imported group into a resource format with one click.
+              Each imported playlist stays grouped under its original YouTube playlist name. Move the whole imported group into a language and resource format with one click.
             </p>
           </div>
         </div>
@@ -111,7 +116,7 @@ export default async function ImportPage({ searchParams }: { searchParams: Promi
                 <div>
                   <div className="text-lg font-extrabold text-[#243447]">{group.title}</div>
                   <div className="mt-1 text-sm font-semibold text-[#6b7c8f]">
-                    {group.language} - {group.count} resources - Current format{group.formats.size === 1 ? "" : "s"}: {Array.from(group.formats).join(", ")}
+                    {group.count} resources - Current language{group.languages.size === 1 ? "" : "s"}: {Array.from(group.languages).join(", ")} - Current format{group.formats.size === 1 ? "" : "s"}: {Array.from(group.formats).join(", ")}
                   </div>
                   {group.sourcePlaylistUrl && (
                     <a href={group.sourcePlaylistUrl} target="_blank" rel="noreferrer" className="mt-2 inline-flex text-sm font-bold text-[#a64026]">
@@ -124,7 +129,11 @@ export default async function ImportPage({ searchParams }: { searchParams: Promi
                 </div>
                 <form action={updateImportedPlaylistFormatAction} className="grid gap-3">
                   <input type="hidden" name="sourcePlaylistId" value={group.sourcePlaylistId} />
-                  <SelectField label="Move entire playlist to" name="resourceFormat" defaultValue={Array.from(group.formats)[0] ?? "Image Diaries"}>
+                  <SelectField label="Language" name="languageId" defaultValue={Array.from(group.languageIds)[0] ?? ""}>
+                    <option value="">Choose language</option>
+                    {languages.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+                  </SelectField>
+                  <SelectField label="Resource Format" name="resourceFormat" defaultValue={Array.from(group.formats)[0] ?? "Image Diaries"}>
                     {resourceFormats.map((item) => <option key={item} value={item}>{item}</option>)}
                   </SelectField>
                   <button type="submit" className="mlp-btn-primary w-full">Apply to all {group.count}</button>

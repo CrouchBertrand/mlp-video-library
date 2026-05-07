@@ -584,11 +584,20 @@ export async function importYouTubePlaylistAction(formData: FormData) {
 export async function updateImportedPlaylistFormatAction(formData: FormData) {
   await guard();
   const sourcePlaylistId = cleanText(formData.get("sourcePlaylistId"));
+  const languageId = cleanOptional(formData.get("languageId"));
   const resourceFormat = normalizeResourceFormat(cleanText(formData.get("resourceFormat")));
   if (!sourcePlaylistId) redirect("/admin/import?error=Imported playlist was not found.");
+  if (!languageId) redirect("/admin/import?error=Please choose a language for the imported playlist.");
+  const language = await prisma.language.findUnique({ where: { id: languageId } });
+  if (!language) redirect("/admin/import?error=Selected language was not found.");
+  const thumbnailUrl = language.thumbnailPath || languageThumbnail(language.code);
   await prisma.video.updateMany({
     where: { sourcePlaylistId },
-    data: { resourceFormat }
+    data: {
+      languageId,
+      resourceFormat,
+      thumbnailUrl
+    }
   });
   const collectionId = `yt_${sourcePlaylistId}`;
   const collection = await prisma.playlist.findUnique({ where: { id: collectionId } });
@@ -596,15 +605,16 @@ export async function updateImportedPlaylistFormatAction(formData: FormData) {
     await prisma.playlist.update({
       where: { id: collectionId },
       data: {
-        tags: [collection.languageId ? "" : null, resourceFormat].filter(Boolean).join(", "),
-        sortOrder: collection.sortOrder
+        languageId,
+        thumbnailUrl: collection.uploadedThumbnailPath ? collection.thumbnailUrl : thumbnailUrl,
+        tags: `${language.name}, ${resourceFormat}`
       }
     });
   }
   revalidatePath("/");
   revalidatePath("/admin/import");
   revalidatePath("/admin/videos");
-  redirect(`/admin/import?success=${encodeURIComponent(`Moved imported playlist to ${resourceFormat}`)}`);
+  redirect(`/admin/import?success=${encodeURIComponent(`Moved imported playlist to ${language.name} - ${resourceFormat}`)}`);
 }
 
 export async function upsertHomepageSectionAction(formData: FormData) {
