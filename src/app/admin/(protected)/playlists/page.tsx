@@ -18,19 +18,19 @@ export default async function CollectionsPage({ searchParams }: { searchParams: 
   return (
     <div>
       <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
-        <div><h1 className="text-3xl font-extrabold">Resource Collections</h1><p className="mt-2 text-sm text-[#6b7c8f]">Optional groups used for homepage rows and curated resource sets.</p></div>
-        <Link href="/admin/playlists/new" className="mlp-btn-primary"><Plus className="size-4" /> Add New Collection</Link>
+        <div><h1 className="text-3xl font-extrabold">Playlists</h1><p className="mt-2 text-sm text-[#6b7c8f]">Add, edit, delete, and organize app playlists.</p></div>
+        <Link href="/admin/playlists/new" className="mlp-btn-primary"><Plus className="size-4" /> Add New Playlist</Link>
       </div>
       <Notice success={params.success} error={params.error} />
       <div className="mb-6 grid gap-4 md:grid-cols-[1fr_170px_170px_44px]">
-        <label className="relative"><Search className="pointer-events-none absolute left-4 top-3.5 size-4 text-[#8b9bad]" /><input placeholder="Search collections..." className="mlp-input w-full pl-11" /></label>
+        <label className="relative"><Search className="pointer-events-none absolute left-4 top-3.5 size-4 text-[#8b9bad]" /><input placeholder="Search playlists..." className="mlp-input w-full pl-11" /></label>
         <select className="mlp-input"><option>Language</option>{languages.map((item) => <option key={item.id}>{item.name}</option>)}</select>
         <select className="mlp-input"><option>Category</option>{categories.map((item) => <option key={item.id}>{item.name}</option>)}</select>
         <button className="grid h-[42px] place-items-center rounded-lg border border-[#d8dde5] bg-white" title="Refresh"><RefreshCw className="size-4" /></button>
       </div>
       <div className="overflow-x-auto rounded-2xl bg-white shadow-sm ring-1 ring-[#edf0f3]">
         <table className="w-full min-w-[860px] text-left">
-          <thead className="bg-[#fbfcfd] text-[11px] uppercase tracking-wide text-[#526579]"><tr><th className="px-6 py-4">Collection Details</th><th className="px-6 py-4">Statistics</th><th className="px-6 py-4">Status</th><th className="px-6 py-4">Featured</th><th className="px-6 py-4 text-right">Actions</th></tr></thead>
+          <thead className="bg-[#fbfcfd] text-[11px] uppercase tracking-wide text-[#526579]"><tr><th className="px-6 py-4">Playlist Details</th><th className="px-6 py-4">Statistics</th><th className="px-6 py-4">Status</th><th className="px-6 py-4">Featured</th><th className="px-6 py-4 text-right">Actions</th></tr></thead>
           <tbody className="divide-y divide-[#edf0f3]">
             {collections.map((collection) => (
               <tr key={collection.id}>
@@ -38,13 +38,13 @@ export default async function CollectionsPage({ searchParams }: { searchParams: 
                 <td className="px-6 py-4 text-sm text-[#526579]"><strong>{collection.videos.length} Resources</strong><br />Order: {collection.sortOrder}</td>
                 <td className="px-6 py-4"><StatusBadge status={collection.visibility} /></td>
                 <td className="px-6 py-4"><Home className={`size-4 ${collection.featured ? "fill-[#a64026] text-[#a64026]" : "text-[#8b9bad]"}`} /></td>
-                <td className="px-6 py-4"><div className="flex justify-end gap-5"><Link href={`/admin/playlists/new?edit=${collection.id}`} className="text-[#a64026]"><Pencil className="size-4" /></Link><form action={deletePlaylistAction}><input type="hidden" name="id" value={collection.id} /><ConfirmDeleteButton compact label="Delete collection" message={`Delete "${collection.title}"? Resources will not be deleted.`} /></form></div></td>
+                <td className="px-6 py-4"><div className="flex justify-end gap-5"><Link href={`/admin/playlists/new?edit=${collection.id}`} className="text-[#a64026]"><Pencil className="size-4" /></Link><form action={deletePlaylistAction}><input type="hidden" name="id" value={collection.id} /><ConfirmDeleteButton compact label="Delete playlist" message={`Delete "${collection.title}"? Videos will not be deleted.`} /></form></div></td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      <div className="mt-6 flex items-center justify-between text-sm text-[#526579]"><span>Showing {collections.length} of {total} collections</span><div className="flex gap-2"><button className="mlp-btn-outline">Previous</button><button className="mlp-btn-outline">Next</button></div></div>
+      <div className="mt-6 flex items-center justify-between text-sm text-[#526579]"><span>Showing {collections.length} of {total} playlists</span><div className="flex gap-2"><button className="mlp-btn-outline">Previous</button><button className="mlp-btn-outline">Next</button></div></div>
     </div>
   );
 }

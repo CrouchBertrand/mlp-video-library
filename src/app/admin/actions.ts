@@ -186,7 +186,7 @@ export async function upsertPlaylistAction(formData: FormData) {
     featured: formData.get("featured") === "on",
     sortOrder: Number(cleanText(formData.get("sortOrder")) || 0)
   };
-  if (!data.title) redirect("/admin/playlists/new?error=Collection title is required");
+  if (!data.title) redirect("/admin/playlists/new?error=Playlist title is required");
   if (!data.languageId) redirect("/admin/playlists/new?error=Please choose a language");
   if (!data.moduleId) redirect("/admin/playlists/new?error=Please choose a category");
   const playlist = id ? await prisma.playlist.update({ where: { id }, data }) : await prisma.playlist.create({ data });
@@ -198,14 +198,14 @@ export async function upsertPlaylistAction(formData: FormData) {
     }
   }
   revalidatePath("/");
-  redirect("/admin/playlists?success=Collection saved");
+  redirect("/admin/playlists?success=Playlist saved");
 }
 
 export async function deletePlaylistAction(formData: FormData) {
   await guard();
   await prisma.playlist.delete({ where: { id: cleanText(formData.get("id")) } });
   revalidatePath("/");
-  redirect("/admin/playlists?success=Collection deleted");
+  redirect("/admin/playlists?success=Playlist deleted");
 }
 
 export async function duplicatePlaylistAction(formData: FormData) {
@@ -406,26 +406,6 @@ export async function importYouTubePlaylistAction(formData: FormData) {
   const sourcePlaylistId = extractYouTubePlaylistId(playlistInput);
   if (!sourcePlaylistId) redirect("/admin/import?error=Please paste a valid YouTube playlist URL.");
 
-  const languageId = cleanOptional(formData.get("languageId"));
-  let moduleId = cleanOptional(formData.get("moduleId"));
-  if (!languageId) redirect("/admin/import?error=Please choose a language.");
-
-  const [language, categoryRow] = await Promise.all([
-    prisma.language.findUnique({ where: { id: languageId } }),
-    moduleId
-      ? prisma.module.findUnique({ where: { id: moduleId } })
-      : prisma.module.findFirst({ where: { name: "General Marketplace Literacy" } })
-  ]);
-  if (!language) redirect("/admin/import?error=Selected language was not found.");
-  if (!moduleId && categoryRow) moduleId = categoryRow.id;
-
-  const program = cleanText(formData.get("program")) || PROGRAM_NAME;
-  const category = categoryRow?.name || cleanText(formData.get("category")) || "General Marketplace Literacy";
-  const resourceType = cleanText(formData.get("resourceType")) || "Video";
-  const resourceFormat = normalizeResourceFormat(cleanText(formData.get("resourceFormat")) || "Doodle");
-  const fallbackThumbnail = cleanOptional(formData.get("thumbnailUrl")) || language.thumbnailPath || languageThumbnail(language.code);
-  const visibilityValue = visibility(formData.get("visibility"));
-  const isPublished = visibilityValue === "Published";
   const sourcePlaylistUrl = youtubePlaylistUrl(sourcePlaylistId);
   const metadataQuery = new URLSearchParams({
     part: "snippet",
@@ -443,45 +423,56 @@ export async function importYouTubePlaylistAction(formData: FormData) {
   const playlistMetadata = metadata.items?.[0]?.snippet;
   const sourcePlaylistTitle = cleanText(playlistMetadata?.title) || `YouTube Playlist ${sourcePlaylistId}`;
   const playlistDescription = cleanOptional(playlistMetadata?.description) || `Imported from ${sourcePlaylistUrl}.`;
+  const targetPlaylistId = cleanOptional(formData.get("targetPlaylistId"));
+  const existingPlaylist = targetPlaylistId
+    ? await prisma.playlist.findUnique({ where: { id: targetPlaylistId }, include: { language: true, module: true } })
+    : null;
+  if (targetPlaylistId && !existingPlaylist) redirect("/admin/import?error=Selected app playlist was not found.");
+
   const playlistThumbnail =
     cleanOptional(formData.get("thumbnailUrl")) ||
     playlistMetadata?.thumbnails?.high?.url ||
     playlistMetadata?.thumbnails?.medium?.url ||
     playlistMetadata?.thumbnails?.default?.url ||
-    fallbackThumbnail;
-  const importedCollection = await prisma.playlist.upsert({
-    where: { id: `yt_${sourcePlaylistId}` },
-    update: {
-      title: sourcePlaylistTitle,
-      shortTitle: sourcePlaylistTitle,
+    existingPlaylist?.thumbnailUrl ||
+    existingPlaylist?.language?.thumbnailPath ||
+    languageThumbnail(existingPlaylist?.language?.code);
+  const visibilityValue = visibility(formData.get("visibility"));
+  const playlist = existingPlaylist ?? await prisma.playlist.create({
+    data: {
+      title: cleanText(formData.get("newPlaylistTitle")) || sourcePlaylistTitle,
+      shortTitle: cleanText(formData.get("newPlaylistTitle")) || sourcePlaylistTitle,
       description: playlistDescription,
       youtubePlaylistUrl: sourcePlaylistUrl,
       thumbnailUrl: playlistThumbnail,
-      languageId,
-      moduleId,
+      languageId: null,
+      moduleId: null,
       region: cleanText(formData.get("region")) || "Global",
-      audience: cleanText(formData.get("audience")) || "Trainers",
-      tags: `${language.name}, ${category}, ${resourceFormat}`,
+      audience: cleanText(formData.get("audience")) || "General",
+      tags: "YouTube import",
       visibility: visibilityValue,
       featured: false
     },
-    create: {
-      id: `yt_${sourcePlaylistId}`,
-      title: sourcePlaylistTitle,
-      shortTitle: sourcePlaylistTitle,
-      description: playlistDescription,
-      youtubePlaylistUrl: sourcePlaylistUrl,
-      thumbnailUrl: playlistThumbnail,
-      languageId,
-      moduleId,
-      region: cleanText(formData.get("region")) || "Global",
-      audience: cleanText(formData.get("audience")) || "Trainers",
-      tags: `${language.name}, ${category}, ${resourceFormat}`,
-      visibility: visibilityValue,
-      featured: false
-    }
+    include: { language: true, module: true }
   });
-  await prisma.playlistVideo.deleteMany({ where: { playlistId: importedCollection.id } });
+  if (existingPlaylist) {
+    await prisma.playlist.update({
+      where: { id: playlist.id },
+      data: {
+        youtubePlaylistUrl: sourcePlaylistUrl,
+        thumbnailUrl: playlist.thumbnailUrl || playlistThumbnail
+      }
+    });
+  }
+  await prisma.playlistVideo.deleteMany({ where: { playlistId: playlist.id } });
+
+  const languageId = playlist.languageId;
+  const moduleId = playlist.moduleId;
+  const category = playlist.module?.name || "Playlist";
+  const resourceType = cleanText(formData.get("resourceType")) || "Video";
+  const resourceFormat = "Online";
+  const fallbackThumbnail = playlist.thumbnailUrl || playlist.language?.thumbnailPath || languageThumbnail(playlist.language?.code);
+  const isPublished = visibilityValue === "Published";
 
   let totalFound = 0;
   let imported = 0;
@@ -514,7 +505,7 @@ export async function importYouTubePlaylistAction(formData: FormData) {
       .filter((id): id is string => Boolean(id));
     const existingVideos = pageVideoIds.length
       ? await prisma.video.findMany({
-          where: { youtubeVideoId: { in: pageVideoIds }, languageId, resourceFormat, category }
+          where: { youtubeVideoId: { in: pageVideoIds }, sourcePlaylistId }
         })
       : [];
     const existingByYoutubeId = new Map(existingVideos.map((video) => [video.youtubeVideoId, video]));
@@ -539,7 +530,7 @@ export async function importYouTubePlaylistAction(formData: FormData) {
         sourcePlaylistId,
         sourcePlaylistUrl,
         thumbnailUrl: fallbackThumbnail,
-        program,
+        program: PROGRAM_NAME,
         category,
         resourceType,
         resourceFormat: normalizeResourceFormat(resourceFormat),
@@ -548,8 +539,8 @@ export async function importYouTubePlaylistAction(formData: FormData) {
         languageId,
         moduleId,
         region: cleanText(formData.get("region")) || "Global",
-        audience: cleanText(formData.get("audience")) || "Trainers",
-        tags: `${language.name}, ${category}, ${resourceFormat}`,
+        audience: cleanText(formData.get("audience")) || "General",
+        tags: playlist.title,
         visibility: visibilityValue
       };
       const savedVideo = existing
@@ -562,9 +553,9 @@ export async function importYouTubePlaylistAction(formData: FormData) {
         imported++;
       }
       await prisma.playlistVideo.upsert({
-        where: { playlistId_videoId: { playlistId: importedCollection.id, videoId: savedVideo.id } },
+        where: { playlistId_videoId: { playlistId: playlist.id, videoId: savedVideo.id } },
         update: { sortOrder: orderIndex },
-        create: { playlistId: importedCollection.id, videoId: savedVideo.id, sortOrder: orderIndex }
+        create: { playlistId: playlist.id, videoId: savedVideo.id, sortOrder: orderIndex }
       });
       existingByYoutubeId.set(savedVideo.youtubeVideoId, savedVideo);
     }
@@ -575,8 +566,9 @@ export async function importYouTubePlaylistAction(formData: FormData) {
   revalidatePath("/admin/videos");
   revalidatePath("/admin/import");
   revalidatePath("/admin/playlists");
+  revalidatePath("/playlists");
   const summary = new URLSearchParams({
-    success: `Imported "${sourcePlaylistTitle}". Found: ${totalFound}. Imported: ${imported}. Updated duplicates: ${updated}. Skipped duplicates: ${skipped}. Errors: ${errors}.`
+    success: `Imported "${sourcePlaylistTitle}" into "${playlist.title}". Found: ${totalFound}. Imported: ${imported}. Updated duplicates: ${updated}. Skipped duplicates: ${skipped}. Errors: ${errors}.`
   });
   redirect(`/admin/import?${summary.toString()}`);
 }

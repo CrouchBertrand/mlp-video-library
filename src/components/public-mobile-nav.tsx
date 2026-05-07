@@ -7,14 +7,14 @@ import { ArrowLeft, GraduationCap, Home, LogIn, Menu, Search, X } from "lucide-r
 
 const navItems = [
   { href: "/", label: "Home", icon: Home },
-  { href: "/resources", label: "Browse Playlists", icon: GraduationCap },
+  { href: "/playlists", label: "Browse Playlists", icon: GraduationCap },
   { href: "/search", label: "Search Library", icon: Search }
 ];
 
 export function PublicMobileNav() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const isResourceRoute = pathname.startsWith("/resources/") || pathname.startsWith("/videos/");
+  const isResourceRoute = pathname.startsWith("/resources/") || pathname.startsWith("/playlists/") || pathname.startsWith("/videos/");
 
   useEffect(() => {
     if (!open) return;
@@ -88,7 +88,7 @@ export function PublicMobileNav() {
                 <p className="px-1 text-xs font-extrabold uppercase tracking-wide text-[#8b9bad]">Navigation</p>
                 {navItems.map((item) => {
                   const Icon = item.icon;
-                  const active = pathname === item.href || (item.href === "/resources" && pathname.startsWith("/resources"));
+                  const active = pathname === item.href || (item.href === "/playlists" && pathname.startsWith("/playlists"));
                   return (
                     <Link
                       key={item.href}

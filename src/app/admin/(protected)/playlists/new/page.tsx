@@ -19,18 +19,18 @@ export default async function CollectionFormPage({ searchParams }: { searchParam
       <input type="hidden" name="id" value={edit?.id ?? ""} />
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <div className="mb-2 text-xs font-bold text-[#6b7c8f]">Resource Collections / <span className="text-[#a64026]">{edit ? "Edit Collection" : "Add New Collection"}</span></div>
-          <h1 className="text-3xl font-extrabold">{edit ? "Edit Collection" : "Add New Collection"}</h1>
+          <div className="mb-2 text-xs font-bold text-[#6b7c8f]">Playlists / <span className="text-[#a64026]">{edit ? "Edit Playlist" : "Add New Playlist"}</span></div>
+          <h1 className="text-3xl font-extrabold">{edit ? "Edit Playlist" : "Add New Playlist"}</h1>
         </div>
         <div className="flex gap-3">
           <Link href="/admin/playlists" className="mlp-btn-outline">Cancel</Link>
           <button name="visibility" value="Draft" className="mlp-btn-outline">Save as Draft</button>
-          <button name="visibility" value="Published" className="mlp-btn-primary"><Save className="size-4" /> Publish Collection</button>
+          <button name="visibility" value="Published" className="mlp-btn-primary"><Save className="size-4" /> Publish Playlist</button>
         </div>
       </div>
       <Notice success={params.success} error={params.error} />
       <div className="mx-auto grid max-w-4xl gap-5 rounded-2xl bg-white p-8 shadow-sm ring-1 ring-[#edf0f3] md:grid-cols-2">
-        <TextField label="Collection title" name="title" defaultValue={edit?.title} required />
+        <TextField label="Playlist title" name="title" defaultValue={edit?.title} required />
         <TextField label="Short title" name="shortTitle" defaultValue={edit?.shortTitle} />
         <TextArea label="Description" name="description" defaultValue={edit?.description} />
         <TextField label="Optional YouTube playlist URL" name="youtubePlaylistUrl" defaultValue={edit?.youtubePlaylistUrl} />
@@ -44,8 +44,8 @@ export default async function CollectionFormPage({ searchParams }: { searchParam
         <TextField label="Sort order" name="sortOrder" type="number" defaultValue={edit?.sortOrder ?? 0} />
         <label className="flex items-center gap-2 pt-7 font-semibold"><input type="checkbox" name="featured" defaultChecked={edit?.featured ?? true} className="accent-[#a64026]" /> Featured on homepage</label>
         <fieldset className="md:col-span-2 rounded-xl border border-[#edf0f3] p-4">
-          <legend className="px-2 font-semibold">Resources in this collection</legend>
-          <p className="mb-4 text-sm text-[#6b7c8f]">Check resources to add them. The order shown here is the saved collection order.</p>
+          <legend className="px-2 font-semibold">Videos in this playlist</legend>
+          <p className="mb-4 text-sm text-[#6b7c8f]">Check videos to add them. The order shown here is the saved playlist order.</p>
           <div className="grid max-h-72 gap-2 overflow-y-auto pr-2 sm:grid-cols-2">
             {resources.map((resource) => (
               <label key={resource.id} className="flex items-start gap-2 rounded-lg p-2 text-sm hover:bg-[#f7f8fa]">

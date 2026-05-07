@@ -8,7 +8,7 @@ import { ArrowLeft, BookOpen, Clapperboard, DownloadCloud, ExternalLink, Globe2,
 const links = [
   ["/admin", "Dashboard", LayoutDashboard],
   ["/admin/videos", "Manage Resources", Clapperboard],
-  ["/admin/playlists", "Resource Collections", BookOpen],
+  ["/admin/playlists", "Playlists", BookOpen],
   ["/admin/languages", "Languages", Globe2],
   ["/admin/modules", "Categories", Tags],
   ["/admin/homepage", "Homepage Sections", Grid2X2],

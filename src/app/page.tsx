@@ -29,7 +29,7 @@ export default async function Home() {
             {settings?.siteDescription ?? "Browse Marketplace Literacy playlists by language."}
           </p>
           <div className="mt-6 grid max-w-3xl gap-3 sm:flex sm:flex-wrap">
-            <Link href="/resources" className="mlp-btn-primary">Browse Playlists <ArrowRight className="size-4" /></Link>
+            <Link href="/playlists" className="mlp-btn-primary">Browse Playlists <ArrowRight className="size-4" /></Link>
             <Link href="/search" className="mlp-btn-outline"><Search className="size-4" /> Search Library</Link>
           </div>
         </div>
@@ -42,7 +42,7 @@ export default async function Home() {
             <h2 className="text-2xl font-extrabold sm:text-3xl">Language Shelves</h2>
             <p className="mt-2 max-w-2xl text-[#6b7c8f]">Start with a language, then open a playlist. No extra folders or category tree.</p>
           </div>
-          <Link href="/resources" className="flex items-center gap-2 text-sm font-extrabold text-[#a64026]">All playlists <ArrowRight className="size-4" /></Link>
+          <Link href="/playlists" className="flex items-center gap-2 text-sm font-extrabold text-[#a64026]">All playlists <ArrowRight className="size-4" /></Link>
         </div>
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {languages.map((language) => (
