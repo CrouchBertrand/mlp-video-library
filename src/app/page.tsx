@@ -3,18 +3,34 @@ import Link from "next/link";
 import { ArrowRight, Languages } from "lucide-react";
 import { PublicFooter } from "@/components/public-footer";
 import { PublicHeader } from "@/components/public-header";
+import { selectPublicPlaylists } from "@/lib/playlist-organization";
 import { prisma } from "@/lib/prisma";
 import { resourceImage } from "@/lib/resource-taxonomy";
 
 export default async function Home() {
-  const [settings, languages] = await Promise.all([
+  const [settings, languages, playlists] = await Promise.all([
     prisma.settings.findUnique({ where: { id: 1 } }),
     prisma.language.findMany({
       where: { isActive: true },
-      orderBy: { sortOrder: "asc" },
-      include: { _count: { select: { playlists: true } } }
+      orderBy: { sortOrder: "asc" }
+    }),
+    prisma.playlist.findMany({
+      where: { visibility: { not: "Hidden" } },
+      include: {
+        language: true,
+        videos: {
+          where: { video: { visibility: { not: "Hidden" } } },
+          select: { videoId: true }
+        }
+      },
+      orderBy: [{ sortOrder: "asc" }, { title: "asc" }]
     })
   ]);
+  const playlistCountByLanguage = selectPublicPlaylists(playlists).reduce((counts, playlist) => {
+    const name = playlist.language?.name;
+    if (name) counts.set(name, (counts.get(name) ?? 0) + 1);
+    return counts;
+  }, new Map<string, number>());
 
   return (
     <main className="mlp-page">
@@ -48,7 +64,7 @@ export default async function Home() {
                   <h3 className="text-xl font-extrabold sm:text-2xl">{language.name}</h3>
                   <ArrowRight className="size-5 text-[#a64026]" />
                 </div>
-                <p className="mt-2 text-sm text-[#6b7c8f]">{language._count.playlists} playlists</p>
+                <p className="mt-2 text-sm text-[#6b7c8f]">{playlistCountByLanguage.get(language.name) ?? 0} playlists</p>
               </div>
             </Link>
           ))}

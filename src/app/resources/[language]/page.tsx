@@ -14,7 +14,13 @@ export default async function LanguagePlaylistsPage({ params }: { params: Promis
   if (!language || !language.isActive) notFound();
   const playlists = await prisma.playlist.findMany({
     where: { languageId: language.id, visibility: { not: "Hidden" } },
-    include: { language: true, _count: { select: { videos: true } } },
+    include: {
+      language: true,
+      videos: {
+        where: { video: { visibility: { not: "Hidden" } } },
+        select: { videoId: true }
+      }
+    },
     orderBy: [{ sortOrder: "asc" }, { title: "asc" }]
   });
   const visiblePlaylists = selectPublicPlaylists(playlists);

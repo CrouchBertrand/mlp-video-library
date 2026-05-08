@@ -12,7 +12,13 @@ export default async function PlaylistsPage() {
     prisma.language.findMany({ where: { isActive: true }, orderBy: { sortOrder: "asc" } }),
     prisma.playlist.findMany({
       where: { visibility: { not: "Hidden" } },
-      include: { language: true, _count: { select: { videos: true } } },
+      include: {
+        language: true,
+        videos: {
+          where: { video: { visibility: { not: "Hidden" } } },
+          select: { videoId: true }
+        }
+      },
       orderBy: [{ sortOrder: "asc" }, { title: "asc" }]
     })
   ]);

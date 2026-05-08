@@ -38,7 +38,7 @@ function playlistKey(languageName: string | null | undefined, title: string) {
 }
 
 function playlistVideoCount(playlist: PlaylistLike) {
-  return playlist._count?.videos ?? playlist.videos?.length ?? 0;
+  return playlist.videos?.length ?? playlist._count?.videos ?? 0;
 }
 
 function playlistPreferenceScore(playlist: PlaylistLike) {

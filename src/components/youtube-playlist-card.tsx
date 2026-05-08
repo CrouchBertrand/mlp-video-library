@@ -15,7 +15,7 @@ type PlaylistCardData = {
 };
 
 export function YouTubePlaylistCard({ playlist }: { playlist: PlaylistCardData }) {
-  const count = playlist._count?.videos ?? playlist.videos?.length ?? 0;
+  const count = playlist.videos?.length ?? playlist._count?.videos ?? 0;
   const thumbnail = playlist.uploadedThumbnailPath || playlist.thumbnailUrl || resourceImage({ language: playlist.language });
   return (
     <article className="min-w-[250px] max-w-[280px] overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-[#e5e7eb] transition hover:-translate-y-0.5 hover:shadow-md">
