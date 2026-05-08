@@ -15,8 +15,7 @@ export default async function PlaylistsPage() {
       include: {
         language: true,
         videos: {
-          where: { video: { visibility: { not: "Hidden" } } },
-          select: { videoId: true }
+          select: { video: { select: { visibility: true } } }
         }
       },
       orderBy: [{ sortOrder: "asc" }, { title: "asc" }]

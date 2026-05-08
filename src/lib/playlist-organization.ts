@@ -13,7 +13,7 @@ type PlaylistLike = {
   sortOrder?: number | null;
   visibility?: string | null;
   language?: PlaylistLanguage | null;
-  videos?: unknown[];
+  videos?: Array<{ video?: { visibility?: string | null } }>;
   _count?: { videos?: number | null } | null;
 };
 
@@ -38,7 +38,7 @@ function playlistKey(languageName: string | null | undefined, title: string) {
 }
 
 function playlistVideoCount(playlist: PlaylistLike) {
-  return playlist.videos?.length ?? playlist._count?.videos ?? 0;
+  return playlist.videos?.filter((item) => item.video?.visibility !== "Hidden").length ?? playlist._count?.videos ?? 0;
 }
 
 function playlistPreferenceScore(playlist: PlaylistLike) {
