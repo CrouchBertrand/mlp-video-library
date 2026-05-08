@@ -16,9 +16,7 @@ export default async function LanguagePlaylistsPage({ params }: { params: Promis
     where: { languageId: language.id, visibility: { not: "Hidden" } },
     include: {
       language: true,
-      videos: {
-        select: { video: { select: { visibility: true } } }
-      }
+      _count: { select: { videos: true } }
     },
     orderBy: [{ sortOrder: "asc" }, { title: "asc" }]
   });

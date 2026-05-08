@@ -18,9 +18,7 @@ export default async function Home() {
       where: { visibility: { not: "Hidden" } },
       include: {
         language: true,
-        videos: {
-          select: { video: { select: { visibility: true } } }
-        }
+        _count: { select: { videos: true } }
       },
       orderBy: [{ sortOrder: "asc" }, { title: "asc" }]
     })
