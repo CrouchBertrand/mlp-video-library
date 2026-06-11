@@ -8,7 +8,8 @@ export async function GET() {
       prisma.video.count()
     ]);
     return NextResponse.json({ ok: true, languages, resources });
-  } catch {
+  } catch (error) {
+    console.error("Health check failed", error);
     return NextResponse.json({ ok: false }, { status: 500 });
   }
 }
