@@ -19,12 +19,18 @@ if (process.env.NETLIFY === "true" && isPostgresUrl(directUrl)) {
   console.log("Netlify build: DATABASE_URL was not usable, falling back to DIRECT_URL.");
 }
 
-const steps = [
-  ["npx", ["prisma", "generate", "--schema=prisma/schema.postgres.prisma"]],
-  ["npx", ["prisma", "db", "push", "--schema=prisma/schema.postgres.prisma"]],
-  ["npx", ["tsx", "scripts/init-production-db.ts"]],
-  ["npx", ["next", "build", "--webpack"]]
-];
+const steps = [["npx", ["prisma", "generate", "--schema=prisma/schema.postgres.prisma"]]];
+
+if (process.env.RUN_DATABASE_SETUP === "true") {
+  steps.push(
+    ["npx", ["prisma", "db", "push", "--schema=prisma/schema.postgres.prisma"]],
+    ["npx", ["tsx", "scripts/init-production-db.ts"]]
+  );
+} else {
+  console.log("Netlify build: skipping database setup. Set RUN_DATABASE_SETUP=true only when intentionally preparing a new database.");
+}
+
+steps.push(["npx", ["next", "build", "--webpack"]]);
 
 for (const [command, args] of steps) {
   console.log(`\n> ${command} ${args.join(" ")}`);

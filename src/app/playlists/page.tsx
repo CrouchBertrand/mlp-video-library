@@ -7,6 +7,8 @@ import { publicPlaylistShelfTitle, selectPublicPlaylists } from "@/lib/playlist-
 import { prisma } from "@/lib/prisma";
 import { youtubeStyleShelves } from "@/lib/resource-taxonomy";
 
+export const dynamic = "force-dynamic";
+
 export default async function PlaylistsPage() {
   const [languages, playlists] = await Promise.all([
     prisma.language.findMany({ where: { isActive: true }, orderBy: { sortOrder: "asc" } }),

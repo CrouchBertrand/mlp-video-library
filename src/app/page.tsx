@@ -7,6 +7,8 @@ import { selectPublicPlaylists } from "@/lib/playlist-organization";
 import { prisma } from "@/lib/prisma";
 import { resourceImage } from "@/lib/resource-taxonomy";
 
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
   const [settings, languages, playlists] = await Promise.all([
     prisma.settings.findUnique({ where: { id: 1 } }),
