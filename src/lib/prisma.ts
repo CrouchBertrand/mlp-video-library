@@ -9,11 +9,6 @@ function normalizeDatabaseUrl() {
     process.env.DATABASE_URL = databaseUrl;
   }
 
-  if (process.env.NETLIFY === "true" && isPostgresUrl(directUrl)) {
-    process.env.DATABASE_URL = directUrl;
-    return;
-  }
-
   if (!isPostgresUrl(process.env.DATABASE_URL) && isPostgresUrl(directUrl)) {
     process.env.DATABASE_URL = directUrl;
   }
